@@ -1,0 +1,66 @@
+domainListRuleGroupExample:
+  name: example-domainlist
+  description: example domain list rule
+  capacity: 100
+  domainRuleType: "ALLOWLIST"
+  domainTargetTypes:
+  - HTTP_HOST
+  - TLS_SNI
+  domainTargets:
+  - "example.com"
+  - "contoso.org"
+
+statefulRuleGroupExample:
+  name: example-stateful
+  description: example standard stateful rule
+  capacity: 100
+  statefulRules:
+    rule1:
+      sid: 12345
+      action: PASS
+      source: 127.0.0.1/32
+      sourcePort: 443
+      destination: 127.0.0.2/32
+      destinationPort: 443
+      protocol: TCP
+      direction: ANY
+    rule2:
+      sid: 12346
+      action: PASS
+      source: 127.0.0.1/32
+      sourcePort: 8443
+      destination: 127.0.0.2/32
+      destinationPort: 8443
+      protocol: TCP
+      direction: ANY
+      ruleOptions:
+        option1:
+          keyword: msg
+          settings:
+          - "\"this is a stateful drop rule\""
+        option2:
+          keyword: noalert
+
+suricataRuleGroupExample:
+  name: example-suricata
+  description: example suricata based firewall group rules
+  capacity: 100
+  ruleVariables:
+    ipSets:
+        variable1:
+          key: WEB_HOST
+          values:
+          - 127.0.0.1/32
+        variable2:
+          key: EC2_HOSTS
+          values:
+          - 127.0.0.3/32
+    portSets:
+        variable1:
+          key: HTTP_PORTS
+          values:
+          - "8443"
+  suricataRules: example.rules
+  suricataRules2: |
+    alert ip $WEB_HOSTS any -> $EC2_HOSTS $HTTP_PORTS (flow:to_server; msg:"Allow HTTP"; sid:123456; rev:1;)
+    pass ip $WEB_HOSTS any -> $EC2_HOSTS $HTTP_PORTS (flow:to_server; msg:"pass rule no logging"; sid:123457; rev:1;)

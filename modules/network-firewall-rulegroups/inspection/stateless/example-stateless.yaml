@@ -1,0 +1,61 @@
+ruleGroup1:
+  name: example-stateless
+  description: example stateless firewall group rules
+  capacity: 100
+  customActions:
+    action1:
+      dimensions:
+      - 2
+    action2:
+      dimensions:
+      - 3
+  statelessRules:
+    rule1:
+      priority: 1
+      action:
+      - "aws:pass"
+      source: 
+      - 127.0.0.1/32
+      - 127.0.0.2/32
+      sourcePort:
+        range1:
+          from: 443
+          to: 443
+        range2:
+          from: 8443
+          to: 8443
+      destination: 
+      - 127.0.0.1/32
+      destinationPort:
+        range1:
+          from: 443
+          to: 443
+        range2:
+          from: 8443
+          to: 8443
+      protocols:
+        - 6
+      tcp:
+        flags:
+        - SYN
+        masks:
+        - SYN
+        - ACK
+    rule2:
+      priority: 1
+      action:
+      - "aws:pass"
+      source: 
+      - 127.0.0.1/32
+      sourcePort:
+        range1:
+          from: 8080
+          to: 8080
+      destination: 
+      - 127.0.0.1/32
+      destinationPort:
+        range1:
+          from: 8080
+          to: 8080
+      protocols:
+        - 17
