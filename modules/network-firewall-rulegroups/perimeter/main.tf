@@ -9,10 +9,10 @@ resource "aws_networkfirewall_rule_group" "this" {
   capacity    = var.capacity
 
   dynamic "encryption_configuration" {
-    for_each = length(var.encryption_configuration) > 0 ? [var.encryption_configuration] : []
+    for_each = var.encryption_configuration != null ? [var.encryption_configuration] : []
     content {
-      key_id = try(encryption_configuration.value.key_id, null)
-      type   = encryption_configuration.value.type
+      key_id = encryption_configuration.value["key_id"]
+      type   = encryption_configuration.value["type"]
     }
   }
 

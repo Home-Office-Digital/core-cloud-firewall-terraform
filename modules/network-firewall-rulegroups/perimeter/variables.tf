@@ -41,9 +41,12 @@ variable "stateful_rule_order" {
 }
 
 variable "encryption_configuration" {
-  description = "Encryption configuration for the rule group"
-  type        = map(string)
-  default     = {}
+  description = "Encryption configuration for the rule group. Set to null to disable encryption."
+  type = object({
+    key_id = string
+    type   = string
+  })
+  default = null
 }
 
 variable "tags" {
