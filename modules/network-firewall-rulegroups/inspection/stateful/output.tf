@@ -31,9 +31,9 @@ output "capacity" {
   value       = aws_networkfirewall_rule_group.this[var.active_rule_group_version].capacity
 }
 
-output "rule_group_status" {
-  description = "Status of the active rule group"
-  value       = aws_networkfirewall_rule_group.this[var.active_rule_group_version].rule_group_status
+output "type" {
+  description = "Type of the active rule group (STATEFUL)"
+  value       = aws_networkfirewall_rule_group.this[var.active_rule_group_version].type
 }
 
 # ==============================================================================
@@ -48,6 +48,7 @@ output "all_rule_groups" {
       name         = rg.name
       update_token = rg.update_token
       capacity     = rg.capacity
+      type         = rg.type
       tags         = rg.tags
     }
   }

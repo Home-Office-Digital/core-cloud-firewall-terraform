@@ -96,10 +96,6 @@ resource "aws_networkfirewall_firewall_policy" "this" {
       error_message = "Cannot remove the active policy version '${each.key}' when multiple versions exist. Switch active_policy_version to another version first, then remove this one."
     }
   }
-
-  depends_on = [
-    aws_networkfirewall_firewall_policy.this
-  ]
 }
 
 # ==============================================================================
