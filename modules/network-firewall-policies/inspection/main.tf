@@ -44,7 +44,7 @@ import {
 # ==============================================================================
 # TODO: Remove this block after all environments migrated
 moved {
-  from = aws_networkfirewall_firewall_policy.this
+  from = aws_networkfirewall_firewall_policy.policy
   to   = aws_networkfirewall_firewall_policy.this["primary"]
 }
 
