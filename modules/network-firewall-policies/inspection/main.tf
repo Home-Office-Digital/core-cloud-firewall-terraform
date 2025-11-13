@@ -40,6 +40,15 @@ import {
 }
 
 # ==============================================================================
+# State Migration: Non-versioned → Versioned
+# ==============================================================================
+# TODO: Remove this block after all environments migrated
+moved {
+  from = aws_networkfirewall_firewall_policy.this
+  to   = aws_networkfirewall_firewall_policy.this["primary"]
+}
+
+# ==============================================================================
 # Create Firewall Policies (Multiple Versions)
 # ==============================================================================
 resource "aws_networkfirewall_firewall_policy" "this" {

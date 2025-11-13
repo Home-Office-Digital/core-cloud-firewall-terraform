@@ -37,6 +37,15 @@ locals {
 }
 
 # ==============================================================================
+# State Migration: Non-versioned → Versioned
+# ==============================================================================
+# TODO: Remove this block after all environments migrated
+moved {
+  from = aws_networkfirewall_rule_group.this
+  to   = aws_networkfirewall_rule_group.this["primary"]
+}
+
+# ==============================================================================
 # Create Stateful Rule Groups (Multiple Versions)
 # ==============================================================================
 resource "aws_networkfirewall_rule_group" "this" {
