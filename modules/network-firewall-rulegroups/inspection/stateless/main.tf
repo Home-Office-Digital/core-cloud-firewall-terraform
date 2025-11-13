@@ -141,15 +141,19 @@ resource "aws_networkfirewall_rule_group" "this" {
   lifecycle {
     create_before_destroy = true
 
-    # Keep preconditions
+    # Validate active version exists
     precondition {
       condition     = local.active_version_exists
       error_message = "Active rule group version '${var.active_rule_group_version}' does not exist in rule_group_versions map. Available versions: ${join(", ", keys(local.all_versions))}"
     }
 
+    # Prevent removing active version when multiple versions exist
     precondition {
-      condition     = each.key != var.active_rule_group_version || length(local.rule_group_configs) > 1
-      error_message = "Cannot remove the active rule group version '${each.key}'. Switch to a different version first or create another version."
+      condition = (
+      each.key != var.active_rule_group_version ||
+      length(local.rule_group_configs) == 1
+      )
+      error_message = "Cannot remove the active rule group version '${each.key}' when multiple versions exist. Switch active_rule_group_version to another version first, then remove this one."
     }
   }
 }

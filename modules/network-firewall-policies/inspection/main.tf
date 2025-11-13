@@ -81,18 +81,25 @@ resource "aws_networkfirewall_firewall_policy" "this" {
   lifecycle {
     create_before_destroy = true
 
-    # Validate active version exists before applying
+    # Validate active version exists
     precondition {
       condition     = local.active_version_exists
       error_message = "Active policy version '${var.active_policy_version}' does not exist in policy_versions map. Available versions: ${join(", ", keys(var.policy_versions))}"
     }
 
-    # Prevent removing active policy unless another exists
+    # Prevent removing active version when multiple versions exist
     precondition {
-      condition     = each.key != var.active_policy_version || length(local.policy_configs) > 1
-      error_message = "Cannot remove the active policy version '${each.key}'. Switch to a different version first or create another version."
+      condition = (
+      each.key != var.active_policy_version ||
+      length(local.policy_configs) == 1
+      )
+      error_message = "Cannot remove the active policy version '${each.key}' when multiple versions exist. Switch active_policy_version to another version first, then remove this one."
     }
   }
+
+  depends_on = [
+    aws_networkfirewall_firewall_policy.this
+  ]
 }
 
 # ==============================================================================
