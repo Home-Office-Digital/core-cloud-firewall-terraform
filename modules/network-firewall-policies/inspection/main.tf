@@ -81,9 +81,6 @@ resource "aws_networkfirewall_firewall_policy" "this" {
   lifecycle {
     create_before_destroy = true
 
-    # Prevent deletion if specified
-    prevent_destroy = try(var.prevent_deletion[each.key], false)
-
     # Validate active version exists before applying
     precondition {
       condition     = local.active_version_exists

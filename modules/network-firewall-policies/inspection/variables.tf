@@ -52,12 +52,6 @@ variable "active_policy_version" {
   }
 }
 
-variable "prevent_deletion" {
-  description = "Prevent deletion of specific policy versions"
-  type        = map(bool)
-  default     = {}
-}
-
 # ==============================================================================
 # Base Policy Configuration
 # ==============================================================================

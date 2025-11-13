@@ -139,9 +139,6 @@ resource "aws_networkfirewall_rule_group" "this" {
   lifecycle {
     create_before_destroy = true
 
-    # Prevent deletion if specified
-    prevent_destroy = try(var.prevent_deletion[each.key], false)
-
     # Validate active version exists
     precondition {
       condition     = local.active_version_exists

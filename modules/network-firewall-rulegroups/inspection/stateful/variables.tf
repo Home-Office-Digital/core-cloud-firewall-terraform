@@ -47,12 +47,6 @@ variable "active_rule_group_version" {
   }
 }
 
-variable "prevent_deletion" {
-  description = "Prevent deletion of specific rule group versions"
-  type        = map(bool)
-  default     = {}
-}
-
 # ==============================================================================
 # Rule Configuration
 # ==============================================================================
