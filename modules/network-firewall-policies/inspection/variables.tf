@@ -1,36 +1,79 @@
-############################################
-# Variables
-############################################
-
+# ==============================================================================
+# Base Configuration
+# ==============================================================================
 variable "account_id" {
-  type        = string
-}
-
-variable "region" {
-  description = "AWS region for Network Firewall ARNs"
-  type        = string
-  default     = "eu-west-2"
-}
-
-
-variable "network_firewall_name" {
-  description = "Existing Network Firewall name (created by LZA)"
-  type        = string
-}
-
-variable "network_firewall_policy_name" {
-  description = "Firewall policy name to apply"
+  description = "AWS Account ID"
   type        = string
 }
 
 variable "vpc_id" {
-  description = "VPC ID of the existing firewall"
+  description = "VPC ID where firewall is deployed"
   type        = string
 }
 
-# AWS-managed stateful rule groups (names + priorities)
+variable "network_firewall_name" {
+  description = "Name of the Network Firewall"
+  type        = string
+}
+
+variable "region" {
+  description = "AWS Region"
+  type        = string
+  default     = ""
+}
+
+# ==============================================================================
+# Policy Versioning - Map-Based
+# ==============================================================================
+variable "policy_versions" {
+  description = "Map of policy versions to create"
+  type = map(object({
+    name_suffix = string
+    description = string
+    tags        = optional(map(string), {})
+  }))
+  default = {
+    primary = {
+      name_suffix = ""
+      description = "Primary firewall policy"
+      tags        = {}
+    }
+  }
+}
+
+variable "active_policy_version" {
+  description = "Which policy version should be active on the firewall"
+  type        = string
+  default     = "primary"
+
+  validation {
+    condition     = var.active_policy_version != ""
+    error_message = "active_policy_version cannot be empty"
+  }
+}
+
+variable "prevent_deletion" {
+  description = "Prevent deletion of specific policy versions"
+  type        = map(bool)
+  default     = {}
+}
+
+# ==============================================================================
+# Base Policy Configuration
+# ==============================================================================
+variable "network_firewall_policy_name" {
+  description = "Base name for firewall policies"
+  type        = string
+}
+
+variable "stateful_default_actions" {
+  description = "Default actions for stateful traffic"
+  type        = list(string)
+  default     = ["aws:drop_established"]
+}
+
 variable "aws_managed_stateful_groups" {
-  description = "List of AWS-managed stateful rule groups by name with priorities."
+  description = "List of AWS managed rule groups with priorities"
   type = list(object({
     name     = string
     priority = number
@@ -38,9 +81,8 @@ variable "aws_managed_stateful_groups" {
   default = []
 }
 
-#  Custom stateful rule groups (full ARNs + priorities)
 variable "custom_stateful_groups" {
-  description = "List of custom stateful rule groups (full ARNs) with priorities."
+  description = "List of custom stateful rule groups with priorities"
   type = list(object({
     arn      = string
     priority = number
@@ -48,15 +90,8 @@ variable "custom_stateful_groups" {
   default = []
 }
 
-variable "stateful_default_actions" {
-  description = "Stateful default actions for NFW policy."
-  type        = list(string)
-
-  validation {
-    condition = alltrue([
-      for a in var.stateful_default_actions :
-      contains(["aws:drop_established", "aws:alert_established"], a)
-    ])
-    error_message = "Only 'aws:drop_established' and 'aws:alert_established' are allowed."
-  }
+variable "tags" {
+  description = "Base tags to apply to all resources"
+  type        = map(string)
+  default     = {}
 }
