@@ -23,20 +23,34 @@ variable "region" {
 }
 
 # ==============================================================================
-# Policy Versioning - Map-Based
+# Policy Versioning - Map-Based with Per-Policy Rule Groups
 # ==============================================================================
 variable "policy_versions" {
-  description = "Map of policy versions to create"
+  description = "Map of policy versions to create, each with its own rule group references"
   type = map(object({
     name_suffix = string
     description = string
     tags        = optional(map(string), {})
+
+    # Each policy version specifies which rule groups it uses
+    custom_stateful_groups = list(object({
+      arn      = string
+      priority = number
+    }))
+
+    custom_stateless_groups = list(object({
+      resource_arn = string
+      priority     = number
+    }))
   }))
+
   default = {
     primary = {
-      name_suffix = ""
-      description = "Primary firewall policy"
-      tags        = {}
+      name_suffix             = ""
+      description             = "Primary firewall policy"
+      tags                    = {}
+      custom_stateful_groups  = []
+      custom_stateless_groups = []
     }
   }
 }
@@ -56,7 +70,7 @@ variable "active_policy_version" {
 # Base Policy Configuration
 # ==============================================================================
 variable "network_firewall_policy_name" {
-  description = "Base name for firewall policies"
+  description = "Base name for firewall policies (version suffix will be appended)"
   type        = string
 }
 
@@ -67,18 +81,9 @@ variable "stateful_default_actions" {
 }
 
 variable "aws_managed_stateful_groups" {
-  description = "List of AWS managed rule groups with priorities"
+  description = "List of AWS managed rule groups with priorities (shared across all policy versions)"
   type = list(object({
     name     = string
-    priority = number
-  }))
-  default = []
-}
-
-variable "custom_stateful_groups" {
-  description = "List of custom stateful rule groups with priorities"
-  type = list(object({
-    arn      = string
     priority = number
   }))
   default = []

@@ -16,6 +16,11 @@ locals {
     for version, config in var.policy_versions : version => {
       name        = "${var.network_firewall_policy_name}${config.name_suffix}"
       description = config.description
+
+      # Rule groups specific to this policy version
+      custom_stateful_groups  = config.custom_stateful_groups
+      custom_stateless_groups = config.custom_stateless_groups
+
       tags = merge(
         var.tags,
         config.tags,
@@ -32,17 +37,8 @@ locals {
 }
 
 # ==============================================================================
-# Import Existing Firewall
-# ==============================================================================
-import {
-  to = aws_networkfirewall_firewall.existing
-  id = "arn:aws:network-firewall:${coalesce(var.region, data.aws_region.current.name)}:${var.account_id}:firewall/${var.network_firewall_name}"
-}
-
-# ==============================================================================
 # State Migration: Non-versioned → Versioned
 # ==============================================================================
-# TODO: Remove this block after all environments migrated
 moved {
   from = aws_networkfirewall_firewall_policy.policy
   to   = aws_networkfirewall_firewall_policy.this["primary"]
@@ -72,12 +68,21 @@ resource "aws_networkfirewall_firewall_policy" "this" {
       }
     }
 
-    # Custom stateful rule groups
+    # Custom stateful rule groups (per-policy version)
     dynamic "stateful_rule_group_reference" {
-      for_each = var.custom_stateful_groups
+      for_each = each.value.custom_stateful_groups
       content {
         resource_arn = stateful_rule_group_reference.value.arn
         priority     = stateful_rule_group_reference.value.priority
+      }
+    }
+
+    # Custom stateless rule groups (per-policy version)
+    dynamic "stateless_rule_group_reference" {
+      for_each = each.value.custom_stateless_groups
+      content {
+        resource_arn = stateless_rule_group_reference.value.resource_arn
+        priority     = stateless_rule_group_reference.value.priority
       }
     }
 
@@ -102,8 +107,8 @@ resource "aws_networkfirewall_firewall_policy" "this" {
 # Manage Existing Firewall
 # ==============================================================================
 resource "aws_networkfirewall_firewall" "existing" {
-  name    = var.network_firewall_name
-  vpc_id  = var.vpc_id
+  name   = var.network_firewall_name
+  vpc_id = var.vpc_id
 
   # Point to active policy version
   firewall_policy_arn = aws_networkfirewall_firewall_policy.this[var.active_policy_version].arn
