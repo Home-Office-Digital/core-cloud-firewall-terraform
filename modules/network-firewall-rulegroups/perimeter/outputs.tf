@@ -21,3 +21,8 @@ output "rule_group_update_token" {
   description = "Update token for the rule group"
   value       = aws_networkfirewall_rule_group.this.update_token
 }
+
+output "domain_count" {
+  description = "Number of domains in the whitelist"
+  value       = length(var.whitelisted_domains)
+}

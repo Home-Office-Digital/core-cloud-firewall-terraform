@@ -1,5 +1,5 @@
 # ==============================================================================
-# Perimeter Network Firewall Rule Group - Domain Whitelist
+# Perimeter Network Firewall Rule Group - Domain Whitelist (with Versioning)
 # ==============================================================================
 
 resource "aws_networkfirewall_rule_group" "this" {

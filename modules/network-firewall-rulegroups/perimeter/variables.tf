@@ -1,14 +1,14 @@
 # ==============================================================================
-# Variables - Perimeter Rule Group
+# Variables - Perimeter Rule Group (with Versioning Support)
 # ==============================================================================
 
 variable "name" {
-  description = "Name of the rule group"
+  description = "Name of the rule group (with version suffix applied)"
   type        = string
 }
 
 variable "description" {
-  description = "Description of the rule group"
+  description = "Description of the rule group (with version suffix applied)"
   type        = string
 }
 
@@ -24,7 +24,14 @@ variable "home_net_cidr_ranges" {
 }
 
 variable "whitelisted_domains" {
-  description = "List of domains to whitelist for egress traffic"
+  description = <<-EOT
+    List of domains to whitelist for egress traffic.
+    Processed by terragrunt.hcl from domain list file.
+    Examples:
+      - "example.com"
+      - "*.example.org"
+      - "subdomain.example.net"
+  EOT
   type        = list(string)
 }
 
