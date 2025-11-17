@@ -1,5 +1,5 @@
 # ==============================================================================
-# Variables - Perimeter Policy
+# Variables - Perimeter Policy (with Versioning)
 # ==============================================================================
 
 variable "network_firewall_name" {
@@ -8,14 +8,8 @@ variable "network_firewall_name" {
 }
 
 variable "network_firewall_policy_name" {
-  description = "Name for the firewall policy"
+  description = "Base name for the firewall policy (version suffix will be added)"
   type        = string
-}
-
-variable "description" {
-  description = "Description of the firewall policy"
-  type        = string
-  default     = "Perimeter network firewall policy"
 }
 
 variable "vpc_id" {
@@ -34,7 +28,58 @@ variable "aws_region" {
   default     = "eu-west-2"
 }
 
-# Stateful configuration
+# ==============================================================================
+# Versioning Configuration
+# ==============================================================================
+
+variable "active_policy_version" {
+  description = <<-EOT
+    Which policy version the firewall should actively use.
+    Must match a key in policy_versions map.
+    Examples: "primary", "secondary"
+  EOT
+  type        = string
+  default     = "primary"
+}
+
+variable "policy_versions" {
+  description = <<-EOT
+    Map of policy versions to create. Each version can reference different rule group versions.
+
+    Structure:
+    {
+      "primary" = {
+        name_suffix             = ""           # e.g., "" or "-v2"
+        description             = "..."
+        custom_stateful_groups  = [...]        # Version-specific rule group ARNs
+        tags                    = {...}
+      }
+    }
+  EOT
+  type = map(object({
+    name_suffix            = string
+    description            = string
+    custom_stateful_groups = list(object({
+      resource_arn = string
+      priority     = number
+    }))
+    tags = map(string)
+  }))
+
+  default = {
+    primary = {
+      name_suffix            = ""
+      description            = "Primary perimeter firewall policy"
+      custom_stateful_groups = []
+      tags                   = {}
+    }
+  }
+}
+
+# ==============================================================================
+# Stateful Configuration
+# ==============================================================================
+
 variable "stateful_default_actions" {
   description = "Default actions for stateful traffic"
   type        = list(string)
@@ -48,7 +93,7 @@ variable "stateful_rule_order" {
 }
 
 variable "aws_managed_stateful_groups" {
-  description = "List of AWS managed stateful rule groups to attach"
+  description = "List of AWS managed stateful rule groups to attach (shared across all policy versions)"
   type = list(object({
     resource_arn = string
     priority     = number
@@ -56,16 +101,10 @@ variable "aws_managed_stateful_groups" {
   default = []
 }
 
-variable "custom_stateful_groups" {
-  description = "List of custom stateful rule groups to attach"
-  type = list(object({
-    resource_arn = string
-    priority     = number
-  }))
-  default = []
-}
+# ==============================================================================
+# Stateless Configuration
+# ==============================================================================
 
-# Stateless configuration
 variable "stateless_default_actions" {
   description = "Default actions for stateless traffic"
   type        = list(string)
@@ -79,7 +118,7 @@ variable "stateless_fragment_default_actions" {
 }
 
 variable "tags" {
-  description = "Tags to apply to the policy"
+  description = "Tags to apply to all policy versions"
   type        = map(string)
   default     = {}
 }
