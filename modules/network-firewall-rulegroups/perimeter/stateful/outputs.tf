@@ -1,28 +1,43 @@
 # ==============================================================================
-# Outputs - Perimeter Rule Group
+# Outputs - Perimeter Rule Group (with Versioning)
 # ==============================================================================
 
-output "rule_group_arn" {
-  description = "ARN of the created rule group"
-  value       = aws_networkfirewall_rule_group.this.arn
+output "rule_group_arns" {
+  description = "ARNs of all rule group versions"
+  value = {
+    for version, rg in aws_networkfirewall_rule_group.this :
+    version => rg.arn
+  }
 }
 
-output "rule_group_id" {
-  description = "ID of the created rule group"
-  value       = aws_networkfirewall_rule_group.this.id
+output "rule_group_ids" {
+  description = "IDs of all rule group versions"
+  value = {
+    for version, rg in aws_networkfirewall_rule_group.this :
+    version => rg.id
+  }
 }
 
-output "rule_group_name" {
-  description = "Name of the created rule group"
-  value       = aws_networkfirewall_rule_group.this.name
+output "rule_group_names" {
+  description = "Names of all rule group versions"
+  value = {
+    for version, rg in aws_networkfirewall_rule_group.this :
+    version => rg.name
+  }
 }
 
-output "rule_group_update_token" {
-  description = "Update token for the rule group"
-  value       = aws_networkfirewall_rule_group.this.update_token
+output "rule_group_update_tokens" {
+  description = "Update tokens for all rule group versions"
+  value = {
+    for version, rg in aws_networkfirewall_rule_group.this :
+    version => rg.update_token
+  }
 }
 
-output "domain_count" {
-  description = "Number of domains in the whitelist"
-  value       = length(var.whitelisted_domains)
+output "domain_counts" {
+  description = "Number of domains in each rule group version"
+  value = {
+    for version, config in var.rule_group_versions :
+    version => length(config.whitelisted_domains)
+  }
 }

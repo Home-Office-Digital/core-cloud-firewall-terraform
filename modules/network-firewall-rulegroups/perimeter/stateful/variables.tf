@@ -3,12 +3,12 @@
 # ==============================================================================
 
 variable "name" {
-  description = "Name of the rule group (with version suffix applied)"
+  description = "Base name for rule groups (version suffix will be added)"
   type        = string
 }
 
 variable "description" {
-  description = "Description of the rule group (with version suffix applied)"
+  description = "Base description for rule groups (version suffix will be added)"
   type        = string
 }
 
@@ -23,16 +23,39 @@ variable "home_net_cidr_ranges" {
   type        = list(string)
 }
 
-variable "whitelisted_domains" {
+# ==============================================================================
+# Versioning Configuration
+# ==============================================================================
+
+variable "rule_group_versions" {
   description = <<-EOT
-    List of domains to whitelist for egress traffic.
-    Processed by terragrunt.hcl from domain list file.
-    Examples:
-      - "example.com"
-      - "*.example.org"
-      - "subdomain.example.net"
+    Map of rule group versions to create. Each version can have different domains.
+
+    Structure:
+    {
+      "primary" = {
+        name_suffix         = ""           # e.g., "" or "-v2"
+        description_suffix  = ""           # e.g., "" or " (v2)"
+        whitelisted_domains = ["..."]      # List of domains for this version
+        tags                = {...}        # Additional tags for this version
+      }
+    }
   EOT
-  type        = list(string)
+  type = map(object({
+    name_suffix         = string
+    description_suffix  = string
+    whitelisted_domains = list(string)
+    tags                = map(string)
+  }))
+
+  default = {
+    primary = {
+      name_suffix         = ""
+      description_suffix  = ""
+      whitelisted_domains = []
+      tags                = {}
+    }
+  }
 }
 
 variable "enabled_analysis_types" {
@@ -57,7 +80,7 @@ variable "encryption_configuration" {
 }
 
 variable "tags" {
-  description = "Tags to apply to the rule group"
+  description = "Tags to apply to all rule group versions"
   type        = map(string)
   default     = {}
 }
