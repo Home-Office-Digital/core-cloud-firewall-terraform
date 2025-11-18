@@ -1,6 +1,58 @@
+# ==============================================================================
+# Build Rule Group Configurations
+# ==============================================================================
+locals {
+  # Default primary version if rule_group_versions is empty
+  default_versions = var.rule_group_versions != {} ? {} : {
+    primary = {
+      name_suffix         = ""
+      description_suffix  = ""
+      suricata_rules_path = var.suricata_rules
+      tags                = {}
+    }
+  }
+
+  # Merge default with user-provided versions
+  all_versions = merge(local.default_versions, var.rule_group_versions)
+
+  # Build final configuration for each rule group version
+  rule_group_configs = {
+    for version, config in local.all_versions : version => {
+      name                = "${var.name}${config.name_suffix}"
+      description         = "${var.description}${config.description_suffix}"
+      suricata_rules_path = config.suricata_rules_path != "" ? config.suricata_rules_path : var.suricata_rules
+      tags = merge(
+        var.tags,
+        config.tags,
+        {
+          Version = version
+          Status  = var.active_rule_group_version == version ? "active" : "inactive"
+        }
+      )
+    }
+  }
+
+  # Validate active version exists
+  active_version_exists = contains(keys(local.all_versions), var.active_rule_group_version)
+}
+
+# ==============================================================================
+# State Migration: Non-versioned → Versioned
+# ==============================================================================
+# TODO: Remove this block after all environments migrated
+moved {
+  from = aws_networkfirewall_rule_group.this
+  to   = aws_networkfirewall_rule_group.this["primary"]
+}
+
+# ==============================================================================
+# Create Stateful Rule Groups (Multiple Versions)
+# ==============================================================================
 resource "aws_networkfirewall_rule_group" "this" {
-  name        = var.name
-  description = var.description
+  for_each = local.rule_group_configs
+
+  name        = each.value.name
+  description = each.value.description
   type        = "STATEFUL"
   capacity    = var.capacity
 
@@ -42,9 +94,8 @@ resource "aws_networkfirewall_rule_group" "this" {
     }
 
     rules_source {
-
-      #Suricata ruleset
-      rules_string = try(file(var.suricata_rules), var.suricata_rules, null)
+      # Suricata ruleset - try file first, then use as string
+      rules_string = try(file(each.value.suricata_rules_path), each.value.suricata_rules_path, null)
 
       dynamic "rules_source_list" {
         for_each = length(var.domain_targets) > 0 ? [1] : []
@@ -92,5 +143,16 @@ resource "aws_networkfirewall_rule_group" "this" {
     }
   }
 
-  tags = var.tags
+  tags = each.value.tags
+
+  lifecycle {
+    create_before_destroy = true
+
+    # Validate active version exists
+    precondition {
+      condition     = local.active_version_exists
+      error_message = "Active rule group version '${var.active_rule_group_version}' does not exist in rule_group_versions map. Available versions: ${join(", ", keys(local.all_versions))}"
+    }
+
+  }
 }

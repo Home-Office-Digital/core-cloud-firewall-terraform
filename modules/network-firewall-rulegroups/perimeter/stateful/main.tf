@@ -1,10 +1,24 @@
 # ==============================================================================
-# Perimeter Network Firewall Rule Group - Domain Whitelist
+# Perimeter Network Firewall Rule Group - Domain Whitelist (Multi-Version)
 # ==============================================================================
 
+# ==============================================================================
+# State Migration: Non-versioned → Versioned
+# ==============================================================================
+# Migrate existing single rule group to versioned rule groups
+moved {
+  from = aws_networkfirewall_rule_group.this
+  to   = aws_networkfirewall_rule_group.this["primary"]
+}
+
+# ==============================================================================
+# Create Rule Groups (Multiple Versions)
+# ==============================================================================
 resource "aws_networkfirewall_rule_group" "this" {
-  name        = var.name
-  description = var.description
+  for_each = var.rule_group_versions
+
+  name        = "${var.name}${each.value.name_suffix}"
+  description = "${var.description}${each.value.description_suffix}"
   type        = "STATEFUL"
   capacity    = var.capacity
 
@@ -33,11 +47,11 @@ resource "aws_networkfirewall_rule_group" "this" {
     rules_source {
       # Domain-based allowlist for egress traffic
       dynamic "rules_source_list" {
-        for_each = length(var.whitelisted_domains) > 0 ? [1] : []
+        for_each = length(each.value.whitelisted_domains) > 0 ? [1] : []
         content {
           generated_rules_type = "ALLOWLIST"
           target_types         = var.enabled_analysis_types
-          targets              = var.whitelisted_domains
+          targets              = each.value.whitelisted_domains
         }
       }
     }
@@ -51,5 +65,11 @@ resource "aws_networkfirewall_rule_group" "this" {
     }
   }
 
-  tags = var.tags
+  tags = merge(
+    var.tags,
+    each.value.tags,
+    {
+      Version = each.key
+    }
+  )
 }
