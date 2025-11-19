@@ -103,7 +103,8 @@ resource "aws_networkfirewall_firewall" "existing" {
   vpc_id = var.vpc_id
 
   # Point to active policy version
-  firewall_policy_arn = aws_networkfirewall_firewall_policy.this[var.active_policy_version].arn
+#  firewall_policy_arn = aws_networkfirewall_firewall_policy.this[var.active_policy_version].arn
+  firewall_policy_arn = "arn:aws:network-firewall:eu-west-2:205930636216:firewall-policy/cc-inspection-notprod-nfw-policy"
 
   # Mirror existing subnet mappings
   dynamic "subnet_mapping" {
@@ -119,7 +120,10 @@ resource "aws_networkfirewall_firewall" "existing" {
   }
 
   lifecycle {
-    ignore_changes = [tags]
+    ignore_changes = [
+      tags,
+      firewall_policy_arn
+    ]
   }
 
   depends_on = [
