@@ -14,15 +14,6 @@ import {
 }
 
 # ==============================================================================
-# State Migration: Non-versioned → Versioned
-# ==============================================================================
-# Migrate existing single policy to versioned policies
-moved {
-  from = aws_networkfirewall_firewall_policy.policy
-  to   = aws_networkfirewall_firewall_policy.this["primary"]
-}
-
-# ==============================================================================
 # Create Firewall Policies (Multiple Versions)
 # ==============================================================================
 resource "aws_networkfirewall_firewall_policy" "this" {
