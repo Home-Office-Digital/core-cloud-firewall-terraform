@@ -19,6 +19,14 @@ resource "aws_networkfirewall_firewall" "existing_firewall" {
   vpc_id                 = var.vpc_id                ## Use the existing VPC ID
   firewall_policy_arn    = aws_networkfirewall_firewall_policy.policy.arn
   enabled_analysis_types = var.enabled_analysis_types
+  delete_protection                 = true
+  firewall_policy_change_protection = true
+  subnet_change_protection          = true
+
+  encryption_configuration {
+    key_id = var.kms_key_arn
+    type   = "CUSTOMER_KMS"
+  }
 
   # Subnet mappings (use the existing subnets here)
   dynamic "subnet_mapping" {
@@ -46,6 +54,11 @@ locals {
 
 resource "aws_networkfirewall_firewall_policy" "policy" {
   name = var.network_firewall_policy_name
+
+  encryption_configuration {
+    key_id = var.kms_key_arn
+    type   = "CUSTOMER_KMS"
+  }
 
   firewall_policy {
     # Reference AWS managed or custom stateful rule groups

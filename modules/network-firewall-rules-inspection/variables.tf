@@ -60,3 +60,8 @@ variable "stateful_default_actions" {
     error_message = "Only 'aws:drop_established' and 'aws:alert_established' are allowed."
   }
 }
+
+variable "kms_key_arn" {
+  description = "Customer managed KMS key ARN for Network Firewall encryption"
+  type        = string
+}
