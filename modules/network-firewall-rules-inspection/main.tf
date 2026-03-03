@@ -20,6 +20,14 @@ resource "aws_networkfirewall_firewall" "existing" {
   name                = var.network_firewall_name
   vpc_id              = var.vpc_id
   firewall_policy_arn = aws_networkfirewall_firewall_policy.policy.arn
+  delete_protection                 = true
+  firewall_policy_change_protection = true
+  subnet_change_protection          = true
+
+  encryption_configuration {
+    key_id = var.kms_key_arn
+    type   = "CUSTOMER_KMS"
+  }
 
   # Mirror the existing subnet mappings so plans stay clean
   dynamic "subnet_mapping" {
@@ -46,13 +54,17 @@ resource "aws_networkfirewall_firewall" "existing" {
 ############################################
 resource "aws_networkfirewall_firewall_policy" "policy" {
   name = var.network_firewall_policy_name
+  encryption_configuration {
+    key_id = var.kms_key_arn
+    type   = "CUSTOMER_KMS"
+  }
 
   firewall_policy {
     stateful_default_actions = var.stateful_default_actions
 
     # Stateful engine behavior
     stateful_engine_options {
-      rule_order = "STRICT_ORDER" 
+      rule_order = "STRICT_ORDER"
     }
 
     #  AWS-managed stateful rule groups (names -> ARNs)

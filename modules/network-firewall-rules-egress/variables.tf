@@ -56,3 +56,8 @@ variable "enabled_drop_stateful_default_actions" {
   type        = bool
   default     = false
 }
+
+variable "kms_key_arn" {
+  description = "Customer managed KMS key ARN for Network Firewall encryption"
+  type        = string
+}
