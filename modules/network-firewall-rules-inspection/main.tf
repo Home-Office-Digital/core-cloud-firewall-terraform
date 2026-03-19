@@ -20,6 +20,7 @@ resource "aws_networkfirewall_firewall" "existing" {
   name                = var.network_firewall_name
   vpc_id              = var.vpc_id
   firewall_policy_arn = aws_networkfirewall_firewall_policy.policy.arn
+  delete_protection   = true
 
   # Mirror the existing subnet mappings so plans stay clean
   dynamic "subnet_mapping" {
@@ -37,8 +38,8 @@ resource "aws_networkfirewall_firewall" "existing" {
 
   # Keep LZA-driven drift on tags quiet:
   lifecycle {
-     ignore_changes = [tags]
-   }
+    ignore_changes = [tags]
+  }
 }
 
 ############################################
@@ -52,7 +53,7 @@ resource "aws_networkfirewall_firewall_policy" "policy" {
 
     # Stateful engine behavior
     stateful_engine_options {
-      rule_order = "STRICT_ORDER" 
+      rule_order = "STRICT_ORDER"
     }
 
     #  AWS-managed stateful rule groups (names -> ARNs)
