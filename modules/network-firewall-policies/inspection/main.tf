@@ -110,6 +110,8 @@ resource "aws_networkfirewall_firewall" "existing" {
   name   = var.network_firewall_name
   vpc_id = var.vpc_id
 
+  delete_protection = true
+
   # Point to active policy version
   firewall_policy_arn = aws_networkfirewall_firewall_policy.this[var.active_policy_version].arn
 
