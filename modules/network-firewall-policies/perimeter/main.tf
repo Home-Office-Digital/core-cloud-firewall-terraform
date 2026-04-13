@@ -7,12 +7,6 @@ data "aws_networkfirewall_firewall" "imported" {
   name = var.network_firewall_name
 }
 
-# Import block for existing firewall
-import {
-  to = aws_networkfirewall_firewall.existing
-  id = "arn:aws:network-firewall:${var.aws_region}:${var.account_id}:firewall/${var.network_firewall_name}"
-}
-
 # ==============================================================================
 # State Migration: Non-versioned → Versioned
 # ==============================================================================
