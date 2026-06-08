@@ -3,7 +3,7 @@
 ############################################
 
 variable "account_id" {
-  type        = string
+  type = string
 }
 
 variable "region" {
