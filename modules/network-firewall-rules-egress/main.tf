@@ -10,8 +10,9 @@ data "aws_networkfirewall_firewall" "existing_firewall" {
 # terragrunt import aws_networkfirewall_firewall.existing_firewall arn:aws:network-firewall:eu-west-2:<aws-account-id>:firewall/<existing-nfw-name>
 
 import {
-  to = aws_networkfirewall_firewall.existing_firewall
-  id = "arn:aws:network-firewall:eu-west-2:${var.account_id}:firewall/${var.network_firewall_name}"
+  for_each = var.enable_import ? toset(["existing"]) : toset([])
+  to       = aws_networkfirewall_firewall.existing_firewall
+  id       = "arn:aws:network-firewall:eu-west-2:${var.account_id}:firewall/${var.network_firewall_name}"
 }
 
 resource "aws_networkfirewall_firewall" "existing_firewall" {

@@ -8,8 +8,9 @@ data "aws_networkfirewall_firewall" "imported" {
 }
 
 import {
-  to = aws_networkfirewall_firewall.existing
-  id = "arn:aws:network-firewall:eu-west-2:${var.account_id}:firewall/${var.network_firewall_name}"
+  for_each = var.enable_import ? toset(["existing"]) : toset([])
+  to       = aws_networkfirewall_firewall.existing
+  id       = "arn:aws:network-firewall:eu-west-2:${var.account_id}:firewall/${var.network_firewall_name}"
 }
 
 ############################################
