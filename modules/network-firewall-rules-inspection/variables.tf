@@ -3,7 +3,7 @@
 ############################################
 
 variable "account_id" {
-  type        = string
+  type = string
 }
 
 variable "region" {
@@ -59,4 +59,10 @@ variable "stateful_default_actions" {
     ])
     error_message = "Only 'aws:drop_established' and 'aws:alert_established' are allowed."
   }
+}
+
+variable "enable_import" {
+  description = "Whether to run Terraform import block for existing firewall ownership"
+  type        = bool
+  default     = true
 }

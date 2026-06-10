@@ -56,3 +56,9 @@ variable "enabled_drop_stateful_default_actions" {
   type        = bool
   default     = false
 }
+
+variable "enable_import" {
+  description = "Whether to execute Terraform import block for existing firewall ownership"
+  type        = bool
+  default     = true
+}

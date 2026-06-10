@@ -57,8 +57,8 @@ variable "policy_versions" {
     }
   EOT
   type = map(object({
-    name_suffix            = string
-    description            = string
+    name_suffix = string
+    description = string
     custom_stateful_groups = list(object({
       resource_arn = string
       priority     = number

@@ -65,7 +65,7 @@ variable "suricata_rules_file" {
 variable "rule_variables" {
   description = "Rule variables (IP sets and port sets)"
   type = object({
-    ipSets   = optional(map(object({
+    ipSets = optional(map(object({
       key    = string
       values = list(string)
     })), {})
