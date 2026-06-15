@@ -41,10 +41,12 @@ jobs:
     - name: Discover Terraform test modules
       id: discover
       shell: bash
+      env:
+        MODULES_ROOT: ${{ inputs.modules_root }}
       run: |
         set -euo pipefail
 
-        root="${{ inputs.modules_root }}"
+        root="$MODULES_ROOT"
 
         if [[ ! -d "$root" ]]; then
           echo "modules=[]" >> "$GITHUB_OUTPUT"
@@ -70,10 +72,12 @@ jobs:
 
     - name: Report module test coverage
       shell: bash
+      env:
+        MODULES_ROOT: ${{ inputs.modules_root }}
       run: |
         set -euo pipefail
 
-        root="${{ inputs.modules_root }}"
+        root="$MODULES_ROOT"
         if [[ -d "$root" ]]; then
           total_modules=$(find "$root" -type f -name "main.tf" -print | xargs -n1 dirname | sort -u | wc -l | tr -d ' ')
         else
@@ -170,7 +174,9 @@ jobs:
     if: needs.discover-modules.outputs.modules == '[]'
     steps:
     - name: Skip
-      run: echo "No modules with Terraform tests (*.tftest.hcl) were found under ${{ inputs.modules_root }}/."
+      env:
+        MODULES_ROOT: ${{ inputs.modules_root }}
+      run: echo "No modules with Terraform tests (*.tftest.hcl) were found under ${MODULES_ROOT}/."
 
   comment-test-results:
     name: Comment Terraform test results on PR
