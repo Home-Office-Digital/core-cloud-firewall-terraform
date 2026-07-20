@@ -56,7 +56,7 @@ resource "aws_networkfirewall_firewall_policy" "this" {
     stateful_default_actions = var.stateful_default_actions
 
     stateful_engine_options {
-      rule_order = "STRICT_ORDER"
+      rule_order = var.stateful_rule_order
     }
 
     # AWS-managed stateful rule groups
@@ -86,8 +86,8 @@ resource "aws_networkfirewall_firewall_policy" "this" {
       }
     }
 
-    stateless_default_actions          = ["aws:forward_to_sfe"]
-    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+    stateless_default_actions          = var.stateless_default_actions
+    stateless_fragment_default_actions = var.stateless_fragment_default_actions
   }
 
   tags = each.value.tags

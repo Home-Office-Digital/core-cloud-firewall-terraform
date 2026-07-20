@@ -80,6 +80,24 @@ variable "stateful_default_actions" {
   default     = ["aws:drop_established"]
 }
 
+variable "stateful_rule_order" {
+  description = "Rule evaluation order (STRICT_ORDER or DEFAULT_ACTION_ORDER)"
+  type        = string
+  default     = "STRICT_ORDER"
+}
+
+variable "stateless_default_actions" {
+  description = "Default actions for stateless traffic"
+  type        = list(string)
+  default     = ["aws:forward_to_sfe"]
+}
+
+variable "stateless_fragment_default_actions" {
+  description = "Default actions for stateless fragmented packets"
+  type        = list(string)
+  default     = ["aws:forward_to_sfe"]
+}
+
 variable "aws_managed_stateful_groups" {
   description = "List of AWS managed rule groups with priorities (shared across all policy versions)"
   type = list(object({
