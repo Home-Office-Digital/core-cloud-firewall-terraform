@@ -1,0 +1,23 @@
+name: Deploy static site to GitHub Pages
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-deploy:
+    uses: Home-Office-Digital/core-cloud-workflow-dac-actions/.github/workflows/build-deploy.yml@1.0.1
+    with:
+      working_directory: "docs"
+      node_version: "24"
+      path: "docs/_site"
