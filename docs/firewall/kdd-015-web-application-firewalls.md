@@ -9,6 +9,8 @@ last_reviewed: 2026-07-28
 tags: []
 status: draft
 ---
+<!-- REVIEW: @Core-Cloud-Architecture - Gliffy diagram: WAF architecture and deployment pattern. Export from Confluence source: https://collaboration.homeoffice.gov.uk/spaces/CORE/pages/435447566 -->
+
 
 
 

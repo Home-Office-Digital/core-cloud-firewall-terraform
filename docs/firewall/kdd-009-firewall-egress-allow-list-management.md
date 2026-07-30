@@ -9,6 +9,8 @@ last_reviewed: 2026-07-28
 tags: []
 status: draft
 ---
+<!-- REVIEW: @Core-Cloud-Architecture - Gliffy diagram: Firewall egress allow list management design. Export from Confluence source: https://collaboration.homeoffice.gov.uk/spaces/CORE/pages/380285389 -->
+
 
 Design Decision Summary
 | ID | KDD-09 |  |
