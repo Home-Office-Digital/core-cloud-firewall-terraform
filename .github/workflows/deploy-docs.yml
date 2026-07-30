@@ -1,0 +1,26 @@
+name: build-deploy-pages
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+jobs:
+  build-deploy:
+    uses: Home-Office-Digital/core-cloud-workflow-dac-actions/.github/workflows/build-deploy.yml@1.1.2
+    with:
+      working_directory: "docs/"
+      node_version: "24"
+      path: "docs/_site"
+      product_name: "Firewall"
