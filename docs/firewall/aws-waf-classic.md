@@ -10,8 +10,6 @@ tags: []
 status: draft
 ---
 
-# AWS WAF Classic
-
 The full list of available WAF metrics can be found on the AWS Developer Guide: [https://docs.aws.amazon.com/waf/latest/developerguide/waf-metrics.html](https://docs.aws.amazon.com/waf/latest/developerguide/waf-metrics.html)
 
 See below for those currently enabled as default for AWS → Dynatrace Integrations

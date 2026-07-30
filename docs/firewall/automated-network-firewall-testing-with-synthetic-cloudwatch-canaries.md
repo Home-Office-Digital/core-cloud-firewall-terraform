@@ -10,11 +10,13 @@ tags: []
 status: draft
 ---
 
-# Automated Network Firewall Testing with Synthetic Cloudwatch Canaries
+## 1. Overview
 
-## 1. OverviewAmazon CloudWatch Synthetics Canaries are lightweight scripts that simulate user behavior to monitor application endpoints and network connectivity. They run on a schedule and help detect issues such as latency, failures, or blocked traffic. In infrastructure testing, canaries can be deployed within VPCs to validate firewall rules, port accessibility, and service availability using real-time synthetic traffic.
+Amazon CloudWatch Synthetics Canaries are lightweight scripts that simulate user behavior to monitor application endpoints and network connectivity. They run on a schedule and help detect issues such as latency, failures, or blocked traffic. In infrastructure testing, canaries can be deployed within VPCs to validate firewall rules, port accessibility, and service availability using real-time synthetic traffic.
 
-## 2. ObjectiveAutomate the testing of network connectivity between VPCs connected via AWS Network Firewall, ensuring that firewall rules allow or block traffic as intended across various ports and protocols.
+## 2. Objective
+
+Automate the testing of network connectivity between VPCs connected via AWS Network Firewall, ensuring that firewall rules allow or block traffic as intended across various ports and protocols.
 
 ## 3. Scope- Canary deployed in VPC A
 - Target EC2 in VPC B using private IP

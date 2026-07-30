@@ -10,8 +10,6 @@ tags: []
 status: draft
 ---
 
-# CoreCloud Detailed Inspection
-
 The purpose of this document is to outline a straw-man/first pass of detailed inspection to support the build-out of the landing zone accelerator configuration files and any Terraform pipelines required to meet the inspection requirements for:
 
 - East-West traffic moving between VPCs in CoreCloud, including environment segregation to stop traffic moving between SDLC stages such as Dev/Test and NotProd/Prod.

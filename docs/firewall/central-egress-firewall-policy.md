@@ -10,8 +10,6 @@ tags: []
 status: draft
 ---
 
-# Central Egress Firewall Policy
-
 This page outlines the baseline ruleset that will be defined in the central [Egress](https://collaboration.homeoffice.gov.uk/display/CORE/CoreCloud+Detailed+Inspection) firewall policy for the purpose of this document it is assumed the same policy will be applied in both Not-Prod and Prod firewall context but Terraform can be built to allow divergence between these stages. 
 
 ## Applied Managed Rules

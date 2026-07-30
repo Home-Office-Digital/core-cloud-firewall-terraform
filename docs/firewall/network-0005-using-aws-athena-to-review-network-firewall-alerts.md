@@ -10,8 +10,6 @@ tags: []
 status: draft
 ---
 
-# NETWORK-0005 Using AWS Athena to Review Network Firewall Alerts
-
 | **Scope & Background Information**
 
  |  |
@@ -42,7 +40,9 @@ CREATE DATABASE IF NOT EXISTS network_firewall_database;
 ```
 
 ### 3. Set the current database- In the Athena console, choose **network_firewall_database** as the *Current database*.
-### 4. Create tables for Alert logsUsing the Athena DDL statement, Create three tables (same schema, different S3 prefixes):
+### 4. Create tables for Alert logs
+
+Using the Athena DDL statement, Create three tables (same schema, different S3 prefixes):
 
 - `network_firewall_alert_logs_cc_inspection_prod`
 

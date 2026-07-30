@@ -10,8 +10,6 @@ tags: []
 status: draft
 ---
 
-# KDD-009: Firewall Egress Allow List Management
-
 Design Decision Summary
 | ID | KDD-09 |  |
 | Title | Firewall Egress Allow List Management |  |
@@ -37,7 +35,9 @@ Design Decision Summary
 
  |  |
 
-## BackgroundWe currently have a [network architecture](https://collaboration.homeoffice.gov.uk/display/CORE/Proposed+updates+to+network+architecture) where NotProd Workloads, Prod Workloads, NotLive Platform Products and Live Platform Products each have their own centralised egress where connectivity out to the internet for resources within that networking pool is via. This is via an AWS Network Firewall and Internet Gateway.
+## Background
+
+We currently have a [network architecture](https://collaboration.homeoffice.gov.uk/display/CORE/Proposed+updates+to+network+architecture) where NotProd Workloads, Prod Workloads, NotLive Platform Products and Live Platform Products each have their own centralised egress where connectivity out to the internet for resources within that networking pool is via. This is via an AWS Network Firewall and Internet Gateway.
 
 Within each of these implementations of centralised egress, there is a perimeter firewall which currently is configured with a [set of managed AWS rules to protect against common botnet attacks, exploits](https://collaboration.homeoffice.gov.uk/display/CORE/Central+Egress+Firewall+Policy) etc. We also maintain a whitelist of allowed domains (a list maintained in GitHub and applied/updated using terraform). 
 
@@ -79,7 +79,7 @@ Currently Core Cloud doesn't have a centralised artifact storage offering and as
 
 - Define a process for handling exceptions to these best practices.
 
-## Optionstrueoptions instructionsmauveOptions Instructions- This section should contain a description of each of the options that you have explored to address the problem statement and meet the requirements documented above, including a list of pros and cons. 
+## Options
 - Diagrams, such as architectural views or sequence diagrams, may be used to help illustrate the options but are not mandated.
 
 Option 1 - Allow by default on all egress firewallsThis option allows all outbound traffic by default on all egress firewalls. Traffic would still go via the NCSC PDNS solution so known malicious domains would be blocked still. We could look to also use AWS Managed Domain Lists on the Route 53 Resolver DNS Firewall to add additional security for high risk domains.
@@ -146,7 +146,7 @@ With Artifactory available as a centralised offering for binaries/build time dep
 
 #### Pros- x
 #### Cons- x
-## Discounted options trueDiscounted OptionsEnter brief details of any technically feasible options - if any - that have been discounted from full analysis, including the rationale for discounting them
+## Discounted Options
 
 | Option Ref and Name | Brief Description | Rationale for discounting |  |
 | 

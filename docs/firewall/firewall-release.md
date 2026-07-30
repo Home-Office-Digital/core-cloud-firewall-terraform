@@ -10,8 +10,6 @@ tags: []
 status: draft
 ---
 
-# Firewall Release
-
 NotProd Network
 
 Central Network

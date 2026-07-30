@@ -10,16 +10,7 @@ tags: []
 status: draft
 ---
 
-# KDD-015: Web Application Firewalls
 
-trueinstructionsmauveInstructions- Complete the page propertiesCategory: choose one of BUSINESS / SOLUTION / INFRASTRUCTURE
-- Type: DESIGN DECISION / SCOPE
-- Status: choose one of LOGGED / IN PROGRESS / BLOCKED / APPROVED / REJECTED
-- Impact: choose one of LOW / MEDIUM / HIGH
-- Architect: "@" the owner, typically yourself
-- Complete the detail of the Design DecisionThis should be done as you go - don't wait until you know the recommendation (i.e. You can start with a Problem Statement and a list of provisional Options - that is enough to discuss with your peers)
-- Add a label of "kdd"The label/tag icon can be found at the bottom right corner of the page  - click the icon, type kdd, add
-- When the KDD has been approved, change the label to "kdd-a".
 
 Design Decision Summary
 | ID | KDD-015 |  |
@@ -46,7 +37,9 @@ Design Decision Summary
 
  |  |
 
-## BackgroundAs part of the wider platform and security programme, the organisation is standardising how internet-facing workloads are protected across AWS accounts operating within an AWS Organization and Landing Zone Accelerator (LZA).
+## Background
+
+As part of the wider platform and security programme, the organisation is standardising how internet-facing workloads are protected across AWS accounts operating within an AWS Organization and Landing Zone Accelerator (LZA).
 
 Multiple application teams (tenants) deploy workloads behind Application Load Balancers (ALBs) in Core Cloud (AWS). To meet security, audit, and operational requirements, a consistent application-layer protection model is required that aligns with organisational security strategy while supporting multi-tenant delivery at scale.
 
@@ -86,7 +79,7 @@ What is the most appropriate approach for managing AWS WAF across multiple AWS a
 
 - Support controlled rollout and rollback of security controls
 
-## Options trueoptions instructionsmauveOptions Instructions- This section should contain a description of each of the options that you have explored to address the problem statement and meet the requirements documented above, including a list of pros and cons. 
+## Options
 - Diagrams, such as architectural views or sequence diagrams, may be used to help illustrate the options but are not mandated.
 
 1: Tenants Manage Their Own AWS WAFEach tenant independently creates, manages, and attaches AWS WAF Web ACLs to their ALBs within their application accounts.
@@ -125,7 +118,7 @@ WAF_IngressWAF_Ingress6
 #### Cons- Additional service cost
 - Reduced flexibility compared to fully tenant-managed WAF
 - Requires careful policy and tagging governance
-## Discounted options trueDiscounted OptionsEnter brief details of any technically feasible options - if any - that have been discounted from full analysis, including the rationale for discounting them
+## Discounted Options
 
 | Option Ref and Name | Brief Description | Rationale for discounting |  |
 | ### 1 – Tenants Manage Their Own AWS WAF
