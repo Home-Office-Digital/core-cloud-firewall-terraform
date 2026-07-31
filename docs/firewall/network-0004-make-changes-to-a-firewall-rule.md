@@ -10,8 +10,6 @@ tags: []
 status: draft
 ---
 
-# NETWORK-0004 Make changes to a firewall rule
-
 falseWarningChanging firewall rules can have wide impact on teants and workloads if done incorrectly. Any changes should be made with caution and be reviewed carefully for misconfiguration.
 
 | **Scope & Background Information**
@@ -49,7 +47,9 @@ If a new rule is required to be added, the value of the `sid` field needs to be 
 
 Append the new rule to the end of the file and be sure to increment the value of the `sid`.
 
-### 4. Create a pull requestRaise a new pull request for the change.
+### 4. Create a pull request
+
+Raise a new pull request for the change.
 
 The request will need to be reviewed by another member of team Andromeda.
 

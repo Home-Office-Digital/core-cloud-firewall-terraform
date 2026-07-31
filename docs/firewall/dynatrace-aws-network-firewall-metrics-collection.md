@@ -9,8 +9,8 @@ last_reviewed: 2026-07-28
 tags: []
 status: draft
 ---
+<!-- REVIEW: @Core-Cloud-Architecture - Gliffy diagram: Dynatrace metrics collection architecture showing CloudWatch Metric Streams and Firehose. Export from Confluence source: https://collaboration.homeoffice.gov.uk/spaces/CORE/pages/392076657 -->
 
-# Dynatrace AWS Network Firewall Metrics Collection
 
 whitepurpleDocument Approval
 
@@ -42,7 +42,9 @@ whitepurpleDocument Approval
  | 
  |  |
 
-## IntroductionThere is a requirement to ingest AWS Network Firewall metrics into Dynatrace. Their existing tooling doesn't cater for this so this will be achieved by using a Firehose and configuring Cloudwatch Metric Streams to forward Network Firewall metrics to it.
+## Introduction
+
+There is a requirement to ingest AWS Network Firewall metrics into Dynatrace. Their existing tooling doesn't cater for this so this will be achieved by using a Firehose and configuring Cloudwatch Metric Streams to forward Network Firewall metrics to it.
 
 There is a limitation with Metric Streams where they can only stream to a firehose within the same account (Unlike CloudWatch Logs which can target another account), so a new one will need to be created in any account which hosts Network Firewall metrics that need to send to Dynatrace.
 
@@ -74,7 +76,9 @@ Firehose Configuration
 **
 ## IAMThe following IAM roles or policies are required for this solution
 
-### Metric Stream roleRole Name: CC-CW-metric-stream-role-env
+### Metric Stream role
+
+Role Name: CC-CW-metric-stream-role-env
 
 Purpose: Allows Metric stream to send metrics to firehose
 
@@ -116,7 +120,9 @@ Required Permissions: 
 }
 
 ```
-## BackupThere is no requirement for any specific backup of this solution
+## Backup
+
+There is no requirement for any specific backup of this solution
 
 ## Cross ChargeCosts incurred for this solution will be charged as part of the overall platform costs as part of the Platform cost recharge model detailed here: [Core Cloud Cost Model - DRAFT - Core Cloud - Confluence](https://collaboration.homeoffice.gov.uk/display/CORE/Core+Cloud+Cost+Model+-+DRAFT) 
 

@@ -10,8 +10,6 @@ tags: []
 status: draft
 ---
 
-# AWS Network Firewall Baseline
-
 ##  Key Considerations:- ### AWS Managed Rules will be used to provide a baseline policy for all firewall contexts
 Managed rule groups are collections of predefined, ready-to-use rules that AWS writes and maintains for . AWS managed rule groups are free to Network Firewall customers but note should be taken of the [disclaimer](https://docs.aws.amazon.com/network-firewall/latest/developerguide/aws-managed-rule-groups-disclaimer.html). 
 

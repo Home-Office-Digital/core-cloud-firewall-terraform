@@ -10,5 +10,3 @@ tags: []
 status: draft
 ---
 
-# Web Application Firewalls
-

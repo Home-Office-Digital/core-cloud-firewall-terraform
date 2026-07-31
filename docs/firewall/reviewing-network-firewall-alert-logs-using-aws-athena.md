@@ -10,9 +10,9 @@ tags: []
 status: draft
 ---
 
-# Reviewing Network Firewall Alert Logs using AWS Athena
+## Scope & Background Information
 
-## Scope & Background InformationThe Network Firewall alerts get logged into an S3 bucket in the LogArchive account.
+The Network Firewall alerts get logged into an S3 bucket in the LogArchive account.
 
 We previously enabled “alert-only” (dry-run) statements for traffic that **would** be dropped once enforcement rules are enabled. The goal is to see what traffic would be blocked so we can identify unexpected workloads or paths that will fail under the new rules.
 
@@ -38,7 +38,9 @@ on a high level Athena is ...
 
 Athena Metadata Container
 
-## ## Getting startedIn Athena, catalogs, databases, and tables are containers for the metadata definitions that define a schema for underlying source data.
+## Getting started
+
+In Athena, catalogs, databases, and tables are containers for the metadata definitions that define a schema for underlying source data.
 
 Athena uses the following terms to refer to hierarchies of data objects:
 
@@ -108,7 +110,9 @@ Tables created :
 2.network_firewall_alert_logs_cc_inspection_notprod. -→ InspectionNotProd
 3. network_firewall_alert_logs_cc_inspection_central --> for Inspection Central
 
-## Key Queries to Review AlertsWe run the following queries in Athena to review the firewall alert logs:
+## Key Queries to Review Alerts
+
+We run the following queries in Athena to review the firewall alert logs:
 
 1 Review Latest Events
 
