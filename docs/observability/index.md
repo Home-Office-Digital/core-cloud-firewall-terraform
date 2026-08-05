@@ -1,5 +1,9 @@
 ---
 layout: sub-navigation
-title: ouservauility
-order: 1
+title: Observability
+order: 6
 ---
+
+Description:
+
+- [Dynatrace AWS Network Firewall Metrics Collection](./dynatrace-aws-network-firewall-metrics-collection/)
