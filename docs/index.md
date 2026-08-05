@@ -7,40 +7,48 @@ order: 1
 
 Description: Platform-managed AWS Network Firewall and WAF — East-West inspection, egress filtering, and web application protection.
 
-## Documentation
+| | |
+|---|---|
+| **Team** | Andromeda |
+| **Key Stakeholders** | |
+| **Senior Responsible Owner** | |
 
-[Product documentation](./product.md)
+## Architecture
 
-## Network Firewall
+- [AWS Network Firewall Baseline](./architecture/aws-network-firewall-baseline/)
+- [Central Egress Firewall Policy](./architecture/central-egress-firewall-policy/)
+- [Central Inspection Firewall Policy](./architecture/central-inspection-firewall-policy/)
+- [Core Cloud Detailed Inspection](./architecture/corecloud-detailed-inspection/)
+- [Default WAF Rules](./architecture/default-waf-rules/)
+- [AWS WAF Classic](./architecture/aws-waf-classic/)
+- [Web Application Firewalls](./architecture/web-application-firewalls/)
+- [KDD-015: Web Application Firewalls](./architecture/kdd-015-web-application-firewalls/)
 
-- [AWS Network Firewall Baseline](./firewall/aws-network-firewall-baseline.md)
-- [Central Egress Firewall Policy](./firewall/central-egress-firewall-policy.md)
-- [Central Inspection Firewall Policy](./firewall/central-inspection-firewall-policy.md)
-- [Core Cloud Detailed Inspection](./firewall/corecloud-detailed-inspection.md)
+## Decision Log
 
-## WAF
-
-- [Default WAF Rules](./firewall/default-waf-rules.md)
-- [AWS WAF Classic](./firewall/aws-waf-classic.md)
-- [KDD-015: Web Application Firewalls](./firewall/kdd-015-web-application-firewalls.md)
-
-## Design Decisions
-
-- [KDD-009: Firewall Egress Allow List Management](./firewall/kdd-009-firewall-egress-allow-list-management.md)
+- [KDD-009: Firewall Egress Allow List Management](./decision-log/kdd-009-firewall-egress-allow-list-management/)
 
 ## Runbooks
 
-- [Network-0004: Make Changes to a Firewall Rule](./firewall/network-0004-make-changes-to-a-firewall-rule.md)
-- [Network-0005: Using AWS Athena to Review Firewall Alerts](./firewall/network-0005-using-aws-athena-to-review-network-firewall-alerts.md)
-- [Reviewing Network Firewall Alert Logs Using AWS Athena](./firewall/reviewing-network-firewall-alert-logs-using-aws-athena.md)
+- [Network-0004: Make Changes to a Firewall Rule](./runbooks/network-0004-make-changes-to-a-firewall-rule/)
+- [Network-0005: Using AWS Athena to Review Firewall Alerts](./runbooks/network-0005-using-aws-athena-to-review-network-firewall-alerts/)
+- [Reviewing Network Firewall Alert Logs Using AWS Athena](./runbooks/reviewing-network-firewall-alert-logs-using-aws-athena/)
+
+## Backups
+
+## Disaster Recovery
 
 ## Observability
 
-- [Dynatrace AWS Network Firewall Metrics Collection](./firewall/dynatrace-aws-network-firewall-metrics-collection.md)
+- [Dynatrace AWS Network Firewall Metrics Collection](./observability/dynatrace-aws-network-firewall-metrics-collection/)
 
 ## Testing
 
-- [Network Firewall Testing](./firewall/network-firewall-testing.md)
-- [Network Firewall Refactor Test Plan (NotProd)](./firewall/network-firewall-refactor-test-plan-for-notprod.md)
-- [Network Firewall Refactor Prod Test Plan (NotProd)](./firewall/network-firewall-refactor-prod-test-plan-for-notprod.md)
-- [Automated Network Firewall Testing with Synthetic Canaries](./firewall/automated-network-firewall-testing-with-synthetic-cloudwatch-canaries.md)
+- [Network Firewall Testing](./testing/network-firewall-testing/)
+- [Network Firewall Refactor Test Plan (NotProd)](./testing/network-firewall-refactor-test-plan-for-notprod/)
+- [Network Firewall Refactor Prod Test Plan (NotProd)](./testing/network-firewall-refactor-prod-test-plan-for-notprod/)
+- [Automated Network Firewall Testing with Synthetic Canaries](./testing/automated-network-firewall-testing-with-synthetic-cloudwatch-canaries/)
+
+## Build, Release, Deployment
+
+- [Firewall Release](./build-release-deployment/firewall-release/)
