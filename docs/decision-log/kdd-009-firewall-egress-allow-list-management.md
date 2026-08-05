@@ -9,7 +9,7 @@ last_reviewed: 2026-07-28
 tags: []
 status: draft
 ---
-<!-- REVIEW: @Core-Cloud-Architecture - Gliffy diagram: Firewall egress allow list management design. Export from Confluence source: https://collaboration.homeoffice.gov.uk/spaces/CORE/pages/380285389 -->
+![Firewall Egress Allow List Design](./assets/firewall-egress-allow-list-design.png)
 
 
 Design Decision Summary
@@ -80,6 +80,75 @@ Currently Core Cloud doesn't have a centralised artifact storage offering and as
 - Use [Route 53 Profiles](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/profiles.html) (Route 53 documentation) to apply DNS-related Route 53 configurations across many VPCs and in different AWS accounts.
 
 - Define a process for handling exceptions to these best practices.
+
+## Use Cases
+
+<!-- TABLE 2: 35 rows -->
+| Id | Use Case | Expected Behaviour | Actual Behaviour | Example | Network Path | Platform Security Controls | Account Level Security Controls | Approval |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | A platform product in Central (NotLive) integration testing with another platform product in Central | Allow (default allow) |  | SonarQube Test testing against GitHub Runner Test | Central LZA TGW | Central Firewall Policy | Security Groups |  |
+| 2 | A platform product in Central (NotLive) integration testing with another platform product in Central | Deny by default, explicit allow required | Denied by default, but explicit allow succeeded. | PreLive stuff testing against already Live stuff. e.g. Dynatrace PreLive testing against GHES Live i | Central LZA TGW | Central Firewall Policy | Security Groups |  |
+| 3 | A NotProd workload connecting to a platform product in Central (Live). | Allow (default allow all NotProd and Prod to access Live) |  | Access from a workload account to GHES / SonarQube e.g. via workspaces/appstream | NotProd LZA TGW → Inspection → NotProd Hub TGW → Central Hub TGW → Central LZA TGW → Inspection | NotProd Firewall PolicyCentral Firewall Policy | Security Groups |  |
+| 4 | A Prod workload connecting to a platform product in Central (Live). | Allow (default allow all NotProd and Prod to access Live) |  | Access from a workload account to GHES / SonarQube e.g. via workspaces/appstream | Prod LZA TGW → Inspection → Prod Hub TGW → Central Hub TGW → Central LZA TGW → Inspection | Prod Firewall PolicyCentral Firewall Policy | Security Groups |  |
+| 5 | A NotProd workload accessing a shared endpoint in Central (Infra). | Allow (default allow all NotProd and Prod to access Infra) |  | A workload accessing shared endpoint to SNS/SQS etc. | NotProd LZA TGW → Inspection → NotProd Hub TGW → Central Hub TGW → Central LZA TGW | NotProd Inspection Policy.Central Inspection Policy.VPC Endpoint Policy.RCP for supported resource.R | Security Groups |  |
+| 6 | A Prod workload accessing a shared endpoint in Central (Infra). | Allow (default allow all NotProd and Prod to access Infra) |  | A workload accessing shared endpoint to SNS/SQS etc. | Prod LZA TGW → Inspection → Prod Hub TGW → Central Hub TGW → Central LZA TGW | Prod Inspection Policy.Central Inspection. Policy VPC Endpoint Policy.RCP for supported resource.Res |  |  |
+| 7 | A NotProd Workload accessing a workload in Prod. | Deny |  | A tenant hosted tooling which requires integration across each of their environments. | Prod TGW → Central TGW (No Route) | No network path. |  |  |
+| 8 | A NotProd Workload accessing a different workload in NotProd. | Deny by default, explicit allow required |  | Could be Prod trying to access Pre-Prod because they share the same pool. So need to move to default | NotProd LZA TGW | NotProd Inspection Policy.RCP for supported resource.Resource Policy.IAM. | Security Groups |  |
+| 9 | A Prod Workload accessing a different workload in Prod. | Deny by default, explicit allow required |  | Could be Prod trying to access Pre-Prod because they share the same pool. So need to move to default | Prod LZA TGW | Prod Inspection Policy.RCP for supported resource.Resource Policy.IAM. | Security Groups |  |
+| 10 | A Prod Workload accessing a workload in NotProd. | Deny |  | A tenant testing some shared tooling that requires integration across each multiple environments. | Prod TGW → Central TGW (No Route) | No network path. |  |  |
+| 11 | A platform product in Central (NotLive) attempting to access an external service via the CTN. | Allow |  | Where Core Cloud platform products need to send data to or interact with other HO platforms. | Central LZA TGW → Inspection → Central HUB TGW | Central Inspection Policy |  |  |
+| 12 | A platform product in Central (Live) attempting to access an external service via the CTN. | Allow |  | Where Core Cloud platform products need to send data to or interact with other HO platforms. | Central LZA TGW → Inspection → Central HUB TGW | Central Inspection Policy |  |  |
+| 13 | A NotProd workload attempting to access an external service via CTN. | Allow? |  | As a new tenant it would be nice to just have an account and a VPC that allows connectivity to where | NotProd LZA TGW → Inspection → NotProd HUB TGW | Summary Rules |  |  |
+| 14 | A Prod workload attempting to access an external service via CTN. | Allow? |  | As a new tenant it would be nice to just have an account and a VPC that allows connectivity to where | Prod LZA TGW → Inspection → Prod HUB TGW | Summary Rules |  |  |
+| 15 | A BYOD device attempting to connect to a platform product in Central (Live). (e.g. GHES via ClientVP | Allow |  | Infra should be able to talk with Live and probably NotLive |  |  |  |  |
+| 16 | A platform product in Central (Live) that needs to connect to workloads in both NotProd and Prod. | Allow |  | Shared CI GH Actions Runners |  | Central Inspection PolicyProd Inspection PolicyNotProd Inspection Policy |  |  |
+| 17 | A platform product in Central (Live) needing to connect to an external service over the Internet via | Allow (FW domain whitelist) |  | Pulling packages from NPM/Maven etc. Entra auth flow. | Central LZA TGW → Perimeter Central | Central Live Egress Policy |  |  |
+| 18 | A platform product in Central (NotLive) needing to connect to an external service over the Internet  | Allow |  | Pulling packages from NPM/Maven etc. Entra auth flow. | Central LZA TGW → Perimeter Central | Central NotLive Egress Policy |  |  |
+| 19 | A request coming in from the Internet via central Ingress to a platform product in Central (NotLive) | Deny |  | Not Live products should not be accessible over the Internet. | Perimeter Central → Central LZA TGW → Inspection (No route) | Central NotLive Inspection policy |  |  |
+| 20 | A request coming in from the Internet via central Ingress to a platform product in Central (Live). | Allow (Explicit rule) |  | EKS public endpoints have been agreed.Artifactory/SonarQube might require public endpoints. | Perimeter Central → Central LZA TGW → Inspection | Central Live Inspection Policy |  |  |
+| 21 | A Prod workload needing to connect to an external service over the Internet via Central Egress. | Allow (subject to NFW rules) |  | Patching and pull down from repositories via YUM updated/ troubleshooting etc. | Prod LZA TGW → Perimeter Prod | Prod Egress policy |  |  |
+| 22 | DNS Lookup to and from POISE | Allow |  |  | Network &lt;-&gt; TGW Central &lt;-&gt; TGW HUB |  |  |  |
+| 23 | DNS Lookup to and from other platforms e.g. ACP | Allow |  |  | Network &lt;-&gt; TGW Central &lt;-&gt; TGW HUB |  |  |  |
+| 24 | DNS lookup forwarding to NCSC | Allow |  |  | Network → NAT G |  |  |  |
+| 25 | DNS Lookup Internal Private Hosted Zones | Allow (Restrict to Tenant Zones) |  |  | Route53 Profile Share |  |  |  |
+| 26 | A NotProd workload needing to connect to an external service over the Internet via Central Egress. | Allow (subject to NFW rules) |  | Testing new libraries from NPM etc. | NotProd LZA TGW → Perimeter NotProd | NotProd Egress Policy |  |  |
+| 27 | A request coming in from the Internet via Ingress to a workload in NotProd | Deny (explicit allow if testing required) |  | Testing integration with service. | Perimeter → NotProd LZA TGW → Inspection | NotProd Inspection Policy |  |  |
+| 28 | A request coming in from the Internet via Ingress to a workload in Prod | Deny (explicit allow if required) |  | Enquiry website? Might be able to use static sites instead. | Perimeter → Prod LZA TGW → Inspection | Prod Inspection Policy |  |  |
+| 29 | CSOC Integration with Splunk. Sending logs via Kinesis Data Firehose | Allow |  |  |  |  |  |  |
+| 30 | A user connecting from POISE over the CTN to a platform product in Central (Live). |  |  | DSA WorkSpaces connecting to GHES | Prod HUB TGW → Prod LZA TGW → Inspection | Central Firewall Policy |  |  |
+| 31 | A user connecting from POISE/Internet to AppStream as part of the PAM solution and then connecting t | Allow |  | APA connecting to AppStream instance to support their Prod environment | Internet → AppStream Managed VPC → Public Endpoints | Identity Centre groups |  |  |
+| 32 | A platform product in Central (Live) attempting to access another platform product in Central (Live) | Allow |  | GitHub actions needing to scan code with SonarQube | VPC → Central TGW → Inspection→ Central TGW → VPC | Central Inspection Firewall rules. | Security Groups |  |
+| 33 | A platform engineer attempting to connect to a platform product in Central (NotLive). (e.g. GHES via | Allow |  | Connecting to PreLive GHES | Perimeter Central → Central LZA TGW → Inspection | VPN ConfigurationCentral Inspection Firewall rules. |  |  |
+| 34 | A tenant engineer attempting to connect to a workload in NotProd via ClientVPN | Allow |  | APC / CTF connecting to their tooling | Perimeter NotProd → NotProd LZA TGW → Inspection | VPN ConfigurationNotProd Inspection Policy |  |  |
+
+<!-- TABLE 3: 25 rows -->
+| Id | Use Case | Expected Behaviour | Example | Network Path | Platform Security Controls | Account Level Security Controls | Approval |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | A platform product in NotProd (TEST) integration testing with another platform product in NotProd (T | Allow (default allow) | CCPreLiveOpsHub to/from CCPreLiveOpsTooling | NotProd TGW | NotProd Inspection Policy |  |  |
+| 2 | A platform product in NotProd (TEST) integration testing with another platform product in Prod (PROD | Deny | CCPreLiveOpsHub to/from ECRLive | No Network path |  |  |  |
+| 3 | A NotProd (DEV) workload connecting to a platform product in Prod (PROD). | Deny | APCToolingNotProd to/from DynatraceProd | No Network path |  |  |  |
+| 4 | A Prod (PROD) workload connecting to a platform product in Prod (PROD). | Allow (default allow) | AdvancedPassengerArrivalsProd to/from DynatraceProd | ProdTGW | Prod Inspection Policy |  |  |
+| 5 | A Prod (PROD) workload connecting to another Prod (PROD) workload. | Allow (default allow) | AdvancedPassengerArrivalsProd to/from CerberusRulesProd | ProdTGW | Prod Inspection Policy |  |  |
+| 6 | A NotProd (DEV) workload connecting to a workload in NotProd (TEST) | Deny | CerberusRulesDev to/from AdvancePassengerArrivalsNotProd | NotProd TGW | NotProd Inspection Policy |  |  |
+| 7 | A NotProd (DEV) workload accessing a shared endpoint in Infra | Allow (default allow all NotProd and Prod to access Shared) | APCToolingNotProd to/from Network (Endpoint VPC) | NotProdTGW | NotProd Inspection Policy |  |  |
+| 8 | A Prod (PROD) workload accessing a shared endpoint in Infra. | Allow (default allow all NotProd and Prod to access Shared) | AdvancedPassengerArrivalsPreProd to/from Network (Endpoint VPC) | ProdTGW | Prod Inspection Policy |  |  |
+| 9 | A NotProd (DEV) workload attempting to access an external service via CTN. | Allow/Deny based on summary rule | APCToolingNotProd connecting to ACP via CTN | NotProdTGW | Summary Rules |  |  |
+| 10 | A Prod (PREPROD) workload attempting to access an external service via CTN. | Allow/Deny based on summary rule | AdvancedPassengerArrivalsPreProd connecting to ACP CDLZ via CTN | ProdTGW | Summary Rules |  |  |
+| 11 | A BYOD VPN device attempting to connect to a platform product in Prod (PROD). (e.g. GHES via ClientV | Allow, destination limited to GHES | APA DevOps engineer connecting to GHES via Client VPNPerimeterProd to CILive |  | VPN Only Routes to GHES Prod Inspection Policy |  |  |
+| 12 | A platform product in Prod (PROD) that needs to connect to workloads in both NotProd (DEV, TEST) and | Allow (default allow)Allow (Explicit rule) | GitHub Action Runners connecting to AdvancedPassengerArrivalsPreProd GitHub Action Runners connectin | ProdTGWNotProd | Prod Inspection PolicyNotProd Inspection Policy |  |  |
+| 13 | A Prod (PROD) platform product needing to connect to an external service over the Internet via Centr | Allow (FW domain whitelist) | CILive → Internet | ProdTGW → Prod Central Egress | Prod Central Egress Policy |  |  |
+| 14 | A NotProd (TEST) platform product needing to connect to an external service over the Internet via Ce | Allow (Allow All external domains) | CCPreLiveOpsHub → Internet | NotProd TGW → NotProd Central Egress | NotProd Central Egress Policy |  |  |
+| 15 | A request coming in from the Internet via central Ingress to a platform product in Prod (PROD). | Allow (Explicit rule) | Connection to EKS public endpoint. | Prod Central Ingress → ProdTGW | Ingress ConfiguredProd Inspection Policy |  |  |
+| 16 | A Prod (PROD) workload needing to connect to an external service over the Internet via Central Egres | Allow (FW domain whitelist) | AdvancedPassengerArrivalsProd → Internet |  |  |  |  |
+| 17 | DNS Lookup to and from POISE | Allow |  |  |  |  |  |
+| 18 | DNS Lookup to and from other platforms e.g. ACP | Allow |  |  |  |  |  |
+| 19 | DNS lookup forwarding to NCSC | Allow |  |  |  |  |  |
+| 20 | DNS Lookup Internal Private Hosted Zones | Allow (Restrict to Tenant Zones) |  |  |  |  |  |
+| 21 | A NotProd (DEV) workload needing to connect to an external service over the Internet via Central Egr | Allow (Allow All external domains) | APCToolingNotProd to Internet |  | PerimeterNotProd Egress Policy |  |  |
+| 22 | CSOC Integration with Splunk | Allow | Sending logs via Kinesis Data Firehose |  |  |  |  |
+| 23 | A user connecting from POISE over the CTN to a platform product in Central (PROD). |  | DSA WorkSpaces connecting to GHES | ProdTGW | Prod Inspection Policy |  |  |
+| 24 | A user connecting from POISE/Internet to AppStream as part of the PAM solution and then connecting t | Allow | APA connecting to AppStream instance to support their Prod environment | Internet → AppStream Managed VPC → Public Endpoints | Identity Centre groups |  |  |
+
 
 ## Options
 - Diagrams, such as architectural views or sequence diagrams, may be used to help illustrate the options but are not mandated.

@@ -1,10 +1,9 @@
 ---
 layout: sub-navigation
 title: Disaster Recovery
-order: 4
+order: 8
 ---
 
 Description:
 
 - [ ] Document disaster recovery for Network Firewall
-- [ ] Document firewall failover procedures

@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build-deploy:
-    uses: Home-Office-Digital/core-cloud-workflow-dac-actions/.github/workflows/build-deploy.yml@1.1.2
+    uses: Home-Office-Digital/core-cloud-workflow-dac-actions/.github/workflows/build-deploy.yml@1.1.3
     with:
       working_directory: "docs/"
       node_version: "24"
