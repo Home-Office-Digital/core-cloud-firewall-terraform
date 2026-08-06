@@ -34,9 +34,6 @@ Description: Platform-managed AWS Network Firewall and WAF — East-West inspect
 - [Network-0005: Using AWS Athena to Review Firewall Alerts](./runbooks/network-0005-using-aws-athena-to-review-network-firewall-alerts/)
 - [Reviewing Network Firewall Alert Logs Using AWS Athena](./runbooks/reviewing-network-firewall-alert-logs-using-aws-athena/)
 
-## Backups
-
-## Disaster Recovery
 
 ## Observability
 
