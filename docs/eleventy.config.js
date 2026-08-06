@@ -13,24 +13,24 @@ export default function eleventyConfigSetup(eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ "assets/logos": "assets/logos" });
 
   const xgovukPluginOptions = {
-    stylesheets: ['/styles/base.css'],
+    stylesheets: [pathPrefix + 'styles/base.css'],
     templates: {
       searchIndex: {
         permalink: '/search.json'
       }
     },
     icons: {
-      mask: '/assets/logos/ho-mask-icon.svg',
-      shortcut: '/assets/logos/ho-favicon.ico',
-      touch: '/assets/logos/ho-apple-touch-icon.png'
+      mask: pathPrefix + 'assets/logos/ho-mask-icon.svg',
+      shortcut: pathPrefix + 'assets/logos/ho-favicon.ico',
+      touch: pathPrefix + 'assets/logos/ho-apple-touch-icon.png'
     },
-    opengraphImageUrl: '/assets/logos/ho-opengraph-image.png',
+    opengraphImageUrl: pathPrefix + 'assets/logos/ho-opengraph-image.png',
     homeKey: 'Home',
     header: {
       logotype: {
         html:
           '<span class="govuk-header__logotype">' +
-          '  <img src="/assets/logos/ho_logo.svg" height="34px" alt="Home Office Logo">' +
+          '  <img src="' + pathPrefix + 'assets/logos/ho_logo.svg" height="34px" alt="Home Office Logo">' +
           '  <span class="govuk-header__logotype-text">Home Office</span>' +
           '</span>'
       },
