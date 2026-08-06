@@ -7,8 +7,8 @@ export default function eleventyConfigSetup(eleventyConfig) {
   const repoOwner = githubRepositoryOwner || 'Home-Office-Digital';
   const repoName = githubRepositoryName || process.env.npm_package_name || '';
 
-  const url = '/';
-  const pathPrefix = '/';
+  const url = '/core-cloud-firewall-terraform/';
+  const pathPrefix = '/core-cloud-firewall-terraform/';
 
   eleventyConfig.addPassthroughCopy({ "assets/logos": "assets/logos" });
 
