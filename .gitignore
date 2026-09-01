@@ -37,3 +37,7 @@ override.tf.json
 terraform.rc
 
 *.zip
+# Node artifacts (no docs-as-code here)
+package-lock.json
+package.json
+node_modules/
