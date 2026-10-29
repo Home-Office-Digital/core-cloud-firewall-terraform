@@ -22,9 +22,12 @@ updates:
                   - "patch"
                   - "major"
 
-    # Enable TF updates for Terraform Projects
+    # Enable TF updates for Terraform Projects.
+    # directories supports globs; directory does not.
+    # ** reaches nested modules such as inspection/stateful.
     - package-ecosystem: "terraform"
-      directory: "/"
+      directories:
+          - "/modules/**"
       schedule:
           interval: "daily"
       commit-message:
@@ -40,6 +43,10 @@ updates:
                   - "*"
           terraform-minor-and-patch:
               applies-to: version-updates
+              patterns:
+                  - "*"
               update-types:
                   - "minor"
                   - "patch"
+              # One PR per dependency across every module directory
+              group-by: "dependency-name"
