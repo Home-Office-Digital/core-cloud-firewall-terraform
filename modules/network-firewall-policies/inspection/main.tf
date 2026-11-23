@@ -18,8 +18,9 @@ locals {
       description = config.description
 
       # Rule groups specific to this policy version
-      custom_stateful_groups  = config.custom_stateful_groups
-      custom_stateless_groups = config.custom_stateless_groups
+      custom_stateful_groups           = config.custom_stateful_groups
+      custom_stateless_groups          = config.custom_stateless_groups
+      tls_inspection_configuration_arn = config.tls_inspection_configuration_arn
 
       tags = merge(
         var.tags,
@@ -89,7 +90,7 @@ resource "aws_networkfirewall_firewall_policy" "this" {
     stateless_default_actions          = var.stateless_default_actions
     stateless_fragment_default_actions = var.stateless_fragment_default_actions
 
-    tls_inspection_configuration_arn = var.tls_inspection_configuration_arn
+    tls_inspection_configuration_arn = each.value.tls_inspection_configuration_arn
   }
 
   tags = each.value.tags

@@ -165,16 +165,15 @@ run "inspection_policy_plan_invalid_active_version" {
   ]
 }
 
-run "inspection_policy_tls_inspection_attached" {
+run "inspection_policy_tls_on_new_version_only" {
   command = plan
 
   variables {
-    account_id                       = "123456789012"
-    vpc_id                           = "vpc-12345678"
-    network_firewall_name            = "existing-inspection-firewall"
-    network_firewall_policy_name     = "inspection-policy"
-    active_policy_version            = "primary"
-    tls_inspection_configuration_arn = "arn:aws:network-firewall:eu-west-2:123456789012:tls-configuration/test"
+    account_id                   = "123456789012"
+    vpc_id                       = "vpc-12345678"
+    network_firewall_name        = "existing-inspection-firewall"
+    network_firewall_policy_name = "inspection-policy"
+    active_policy_version        = "primary"
     policy_versions = {
       primary = {
         name_suffix             = ""
@@ -182,6 +181,14 @@ run "inspection_policy_tls_inspection_attached" {
         tags                    = {}
         custom_stateful_groups  = []
         custom_stateless_groups = []
+      }
+      tls = {
+        name_suffix                      = "-tls"
+        description                      = "Inspection policy with TLS inspection"
+        tags                             = {}
+        custom_stateful_groups           = []
+        custom_stateless_groups          = []
+        tls_inspection_configuration_arn = "arn:aws:network-firewall:eu-west-2:123456789012:tls-configuration/test"
       }
     }
   }
@@ -198,12 +205,17 @@ run "inspection_policy_tls_inspection_attached" {
   }
 
   assert {
-    condition     = aws_networkfirewall_firewall_policy.this["primary"].firewall_policy[0].tls_inspection_configuration_arn == "arn:aws:network-firewall:eu-west-2:123456789012:tls-configuration/test"
-    error_message = "TLS inspection configuration ARN should be set on the firewall policy"
+    condition     = aws_networkfirewall_firewall_policy.this["tls"].firewall_policy[0].tls_inspection_configuration_arn == "arn:aws:network-firewall:eu-west-2:123456789012:tls-configuration/test"
+    error_message = "The TLS version should carry the TLS inspection configuration ARN"
+  }
+
+  assert {
+    condition     = aws_networkfirewall_firewall_policy.this["primary"].firewall_policy[0].tls_inspection_configuration_arn == null
+    error_message = "The primary version must not get a TLS inspection configuration (AWS cannot add one to an existing policy)"
   }
 }
 
-run "inspection_policy_tls_inspection_off_by_default" {
+run "inspection_policy_tls_off_by_default" {
   command = plan
 
   variables {
@@ -236,6 +248,6 @@ run "inspection_policy_tls_inspection_off_by_default" {
 
   assert {
     condition     = aws_networkfirewall_firewall_policy.this["primary"].firewall_policy[0].tls_inspection_configuration_arn == null
-    error_message = "TLS inspection should be off unless an ARN is supplied"
+    error_message = "TLS inspection should be off unless a version sets an ARN"
   }
 }

@@ -31,6 +31,9 @@ variable "policy_versions" {
     name_suffix = string
     description = string
     tags        = optional(map(string), {})
+    # AWS does not allow adding a TLS inspection configuration to an existing policy,
+    # so set this on a NEW policy version and switch active_policy_version to it.
+    tls_inspection_configuration_arn = optional(string)
 
     # Each policy version specifies which rule groups it uses
     custom_stateful_groups = list(object({
@@ -105,12 +108,6 @@ variable "aws_managed_stateful_groups" {
     priority = number
   }))
   default = []
-}
-
-variable "tls_inspection_configuration_arn" {
-  description = "ARN of a TLS inspection configuration to attach to every policy version. Null leaves TLS inspection off."
-  type        = string
-  default     = null
 }
 
 variable "tags" {

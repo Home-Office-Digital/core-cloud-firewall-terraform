@@ -1,6 +1,6 @@
 # network-firewall-tls-inspection
 
-Creates an AWS Network Firewall TLS inspection configuration for **inbound** inspection, together with the public ACM server certificates it needs. Attach the result to a firewall policy through the policy module's `tls_inspection_configuration_arn` input.
+Creates an AWS Network Firewall TLS inspection configuration for **inbound** inspection, together with the public ACM server certificates it needs. Attach the result through the `tls_inspection_configuration_arn` attribute of a **new** policy version in the inspection policy module.
 
 Nothing is decrypted until traffic matches a scope. To keep inspection off for every tenant, give the module a single scope whose destination matches nothing (for example `192.0.2.0/32`) and add tenant CIDRs as tenants ask for inspection.
 
@@ -24,7 +24,18 @@ module "tls_inspection" {
 
 module "policy" {
   # ...
-  tls_inspection_configuration_arn = module.tls_inspection.tls_inspection_configuration_arn
+  active_policy_version = "primary" # switch to "tls" once the new policy is ready
+
+  policy_versions = {
+    primary = { name_suffix = "", description = "...", custom_stateful_groups = [], custom_stateless_groups = [] }
+    tls = {
+      name_suffix                      = "-tls"
+      description                      = "... with TLS inspection"
+      custom_stateful_groups           = []
+      custom_stateless_groups          = []
+      tls_inspection_configuration_arn = module.tls_inspection.tls_inspection_configuration_arn
+    }
+  }
 }
 ```
 
@@ -38,6 +49,10 @@ module "policy" {
 
 > [!NOTE]
 > `core-cloud-acm-tf-module` is not used because every released tag requires AWS provider `~> 6.66`, and this stack runs on provider 5.x.
+
+## Attaching to a policy
+
+AWS does not allow adding a TLS inspection configuration to an existing firewall policy, or removing one. It can only be set when a policy is created, or replaced with another configuration. So attach it to a **new** policy version (`tls_inspection_configuration_arn` on the version), then switch `active_policy_version` to it. Scopes can be changed afterwards by updating this module's configuration in place.
 
 ## Behaviour to know about
 
