@@ -164,3 +164,78 @@ run "inspection_policy_plan_invalid_active_version" {
     aws_networkfirewall_firewall_policy.this
   ]
 }
+
+run "inspection_policy_tls_inspection_attached" {
+  command = plan
+
+  variables {
+    account_id                       = "123456789012"
+    vpc_id                           = "vpc-12345678"
+    network_firewall_name            = "existing-inspection-firewall"
+    network_firewall_policy_name     = "inspection-policy"
+    active_policy_version            = "primary"
+    tls_inspection_configuration_arn = "arn:aws:network-firewall:eu-west-2:123456789012:tls-configuration/test"
+    policy_versions = {
+      primary = {
+        name_suffix             = ""
+        description             = "Primary inspection firewall policy"
+        tags                    = {}
+        custom_stateful_groups  = []
+        custom_stateless_groups = []
+      }
+    }
+  }
+
+  override_data {
+    target = data.aws_networkfirewall_firewall.imported
+    values = {
+      subnet_mapping = [
+        {
+          subnet_id = "subnet-12345678"
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = aws_networkfirewall_firewall_policy.this["primary"].firewall_policy[0].tls_inspection_configuration_arn == "arn:aws:network-firewall:eu-west-2:123456789012:tls-configuration/test"
+    error_message = "TLS inspection configuration ARN should be set on the firewall policy"
+  }
+}
+
+run "inspection_policy_tls_inspection_off_by_default" {
+  command = plan
+
+  variables {
+    account_id                   = "123456789012"
+    vpc_id                       = "vpc-12345678"
+    network_firewall_name        = "existing-inspection-firewall"
+    network_firewall_policy_name = "inspection-policy"
+    active_policy_version        = "primary"
+    policy_versions = {
+      primary = {
+        name_suffix             = ""
+        description             = "Primary inspection firewall policy"
+        tags                    = {}
+        custom_stateful_groups  = []
+        custom_stateless_groups = []
+      }
+    }
+  }
+
+  override_data {
+    target = data.aws_networkfirewall_firewall.imported
+    values = {
+      subnet_mapping = [
+        {
+          subnet_id = "subnet-12345678"
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = aws_networkfirewall_firewall_policy.this["primary"].firewall_policy[0].tls_inspection_configuration_arn == null
+    error_message = "TLS inspection should be off unless an ARN is supplied"
+  }
+}

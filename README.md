@@ -8,7 +8,7 @@ This repository is designed around managing an existing firewall (for example, o
 
 ### Policies
 
-- `modules/network-firewall-policies/inspection`: Versioned inspection firewall policies with support for AWS-managed and custom rule groups.
+- `modules/network-firewall-policies/inspection`: Versioned inspection firewall policies with support for AWS-managed and custom rule groups, and an optional TLS inspection configuration.
 - `modules/network-firewall-policies/perimeter`: Versioned perimeter firewall policies with active-version switching.
 
 ### Rule groups
@@ -16,6 +16,9 @@ This repository is designed around managing an existing firewall (for example, o
 - `modules/network-firewall-rulegroups/inspection/stateful`: Generic stateful rule group module (domain lists, standard stateful rules, Suricata rules).
 - `modules/network-firewall-rulegroups/inspection/stateless`: Generic stateless rule group module.
 - `modules/network-firewall-rulegroups/perimeter/stateful`: Versioned perimeter stateful rule group module for domain allowlists.
+
+### TLS inspection
+- `modules/network-firewall-tls-inspection`: Inbound TLS inspection configuration with public ACM server certificates and per-tenant scopes. Attach it through the inspection policy module.
 
 ### Opinionated bundles
 
@@ -104,6 +107,7 @@ module "perimeter_policy" {
 - Stateful inspection rule group docs: `modules/network-firewall-rulegroups/inspection/stateful/README.md`
 - Stateless inspection rule group docs: `modules/network-firewall-rulegroups/inspection/stateless/README.md`
 - Inspection rule group package docs: `modules/network-firewall-rulegroups/inspection/README.md`
+- TLS inspection module docs: `modules/network-firewall-tls-inspection/README.md`
 - Egress opinionated module docs: `modules/network-firewall-rules-egress/README.md`
 
 ## Development

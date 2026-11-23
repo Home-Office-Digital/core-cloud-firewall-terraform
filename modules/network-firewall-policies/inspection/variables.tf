@@ -107,6 +107,12 @@ variable "aws_managed_stateful_groups" {
   default = []
 }
 
+variable "tls_inspection_configuration_arn" {
+  description = "ARN of a TLS inspection configuration to attach to every policy version. Null leaves TLS inspection off."
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Base tags to apply to all resources"
   type        = map(string)

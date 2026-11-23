@@ -12,6 +12,8 @@ This repository contains Terraform modules for AWS Network Firewall policies and
 - Policy modules:
   - modules/network-firewall-policies/inspection
   - modules/network-firewall-policies/perimeter
+- TLS inspection module:
+  - modules/network-firewall-tls-inspection
 - Rule group modules:
   - modules/network-firewall-rulegroups/inspection/stateful
   - modules/network-firewall-rulegroups/inspection/stateless
