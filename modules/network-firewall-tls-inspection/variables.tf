@@ -13,55 +13,30 @@ variable "description" {
 }
 
 # ==============================================================================
-# Server Certificates
+# Tenants - one public ACM certificate and one certificate/scope group each
 # ==============================================================================
-variable "certificate_domains" {
+variable "tenants" {
   description = <<-EOT
-    Domains to request public ACM certificates for (DNS validated). One certificate
-    is created per entry. A wildcard such as "*.app.tenant.core.example.gov.uk" covers
-    exactly one extra label, so "<tenant>.app.tenant.core.example.gov.uk" but not
-    "www.<tenant>.app.tenant.core.example.gov.uk".
+    Tenants whose traffic can be decrypted, keyed by tenant key. Each tenant gets its own
+    public ACM certificate (DNS validated) and its own scope. All certificates and scopes
+    sit in the one server certificate configuration the AWS provider allows, so AWS picks
+    a certificate by the client's SNI and does not tie it to a particular tenant's scope.
+
+    - domains: names for the certificate. The first is the primary name and any others are
+      added as alternative names. A wildcard such as "*.acme.core.example.gov.uk" covers
+      exactly one extra label ("app1.acme.core.example.gov.uk") but not two.
+    - destinations: the tenant's server CIDRs. Only traffic to these is decrypted. Use a
+      range that matches nothing (192.0.2.0/32) for a tenant that is set up but not live.
+    - sources, source_ports, destination_ports, protocols: narrow the scope. By default any
+      source and source port, destination port 443, TCP.
+
+    Network Firewall allows at most 10 server certificates per configuration, so at most
+    10 tenants.
   EOT
-  type        = list(string)
-  default     = []
-}
-
-variable "existing_server_certificate_arns" {
-  description = "ARNs of issued ACM certificates that already exist and should also be used as server certificates"
-  type        = list(string)
-  default     = []
-}
-
-variable "validation_zone_id" {
-  description = <<-EOT
-    Route 53 public hosted zone ID in this account used to create the ACM DNS validation
-    records. Leave null when the validation CNAMEs are created elsewhere; Terraform then
-    waits for the certificate to be issued (see certificate_validation_timeout) and the
-    required records are available in the certificate_validation_records output.
-  EOT
-  type        = string
-  default     = null
-}
-
-variable "certificate_validation_timeout" {
-  description = "How long to wait for each ACM certificate to be issued"
-  type        = string
-  default     = "30m"
-}
-
-# ==============================================================================
-# Scope - which traffic is decrypted
-# ==============================================================================
-variable "scopes" {
-  description = <<-EOT
-    Traffic that the firewall decrypts and inspects. Only traffic matching a scope is
-    affected, so use a destination that matches nothing (for example 192.0.2.0/32) until
-    a tenant needs inspection. Network Firewall requires at least one scope.
-  EOT
-  type = list(object({
-    name         = optional(string, "")
-    sources      = optional(list(string), ["0.0.0.0/0"])
+  type = map(object({
+    domains      = list(string)
     destinations = list(string)
+    sources      = optional(list(string), ["0.0.0.0/0"])
     source_ports = optional(list(object({
       from_port = number
       to_port   = number
@@ -74,19 +49,50 @@ variable "scopes" {
   }))
 
   validation {
-    condition     = length(var.scopes) > 0
-    error_message = "At least one scope is required."
+    condition     = length(var.tenants) > 0
+    error_message = "At least one tenant is required, because a TLS inspection configuration needs a server certificate."
   }
 
   validation {
-    condition     = alltrue([for s in var.scopes : length(s.destinations) > 0])
-    error_message = "Every scope needs at least one destination CIDR."
+    condition     = length(var.tenants) <= 10
+    error_message = "Network Firewall allows at most 10 server certificates per TLS inspection configuration, so at most 10 tenants."
   }
 
   validation {
-    condition     = alltrue([for s in var.scopes : alltrue([for p in s.protocols : p == 6])])
+    condition     = alltrue([for t in values(var.tenants) : length(t.domains) > 0])
+    error_message = "Every tenant needs at least one certificate domain."
+  }
+
+  validation {
+    condition     = alltrue([for t in values(var.tenants) : length(t.destinations) > 0])
+    error_message = "Every tenant needs at least one destination CIDR."
+  }
+
+  validation {
+    condition     = alltrue([for t in values(var.tenants) : alltrue([for p in t.protocols : p == 6])])
     error_message = "Network Firewall only supports TCP (protocol 6) for TLS inspection."
   }
+}
+
+# ==============================================================================
+# DNS validation
+# ==============================================================================
+variable "validation_zone_id" {
+  description = <<-EOT
+    Route 53 public hosted zone ID in this account used to create the ACM DNS validation
+    records. Leave null when the validation CNAMEs are created elsewhere (for example in a
+    central DNS account); Terraform then waits for each certificate to be issued (see
+    certificate_validation_timeout) and the records to create are in the
+    certificate_validation_records output.
+  EOT
+  type        = string
+  default     = null
+}
+
+variable "certificate_validation_timeout" {
+  description = "How long to wait for each ACM certificate to be issued"
+  type        = string
+  default     = "30m"
 }
 
 # ==============================================================================
