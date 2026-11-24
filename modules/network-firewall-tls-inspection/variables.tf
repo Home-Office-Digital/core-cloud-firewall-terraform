@@ -13,30 +13,42 @@ variable "description" {
 }
 
 # ==============================================================================
-# Tenants - one public ACM certificate and one certificate/scope group each
+# Tenants - one public ACM certificate and one scope each
 # ==============================================================================
 variable "tenants" {
   description = <<-EOT
     Tenants whose traffic can be decrypted, keyed by tenant key. Each tenant gets its own
-    public ACM certificate (DNS validated) and its own scope. All certificates and scopes
-    sit in the one server certificate configuration the AWS provider allows, so AWS picks
-    a certificate by the client's SNI and does not tie it to a particular tenant's scope.
+    public ACM certificate, requested with DNS validation. The module does not create the
+    validation records or wait for them: create the CNAMEs from the
+    certificate_validation_records output, then set certificate_validated = true.
+
+    One certificate per tenant is enough: the firewall terminates the client's TLS with it,
+    inspects, then opens its own TLS connection to the server.
 
     - domains: names for the certificate. The first is the primary name and any others are
       added as alternative names. A wildcard such as "*.acme.core.example.gov.uk" covers
       exactly one extra label ("app1.acme.core.example.gov.uk") but not two.
     - destinations: the tenant's server CIDRs. Only traffic to these is decrypted. Use a
       range that matches nothing (192.0.2.0/32) for a tenant that is set up but not live.
+    - certificate_validated: set to true once ACM shows the certificate as ISSUED. Only
+      tenants with true are put in the TLS inspection configuration, and the configuration
+      is only created once at least one tenant is true. A tenant set to true whose
+      certificate is not ISSUED fails the plan or apply.
     - sources, source_ports, destination_ports, protocols: narrow the scope. By default any
       source and source port, destination port 443, TCP.
+
+    All included tenants' certificates and scopes sit in the one server certificate
+    configuration the AWS provider allows, so AWS picks a certificate by the client's SNI
+    and does not tie it to a particular tenant's scope.
 
     Network Firewall allows at most 10 server certificates per configuration, so at most
     10 tenants.
   EOT
   type = map(object({
-    domains      = list(string)
-    destinations = list(string)
-    sources      = optional(list(string), ["0.0.0.0/0"])
+    domains               = list(string)
+    destinations          = list(string)
+    certificate_validated = optional(bool, false)
+    sources               = optional(list(string), ["0.0.0.0/0"])
     source_ports = optional(list(object({
       from_port = number
       to_port   = number
@@ -50,7 +62,7 @@ variable "tenants" {
 
   validation {
     condition     = length(var.tenants) > 0
-    error_message = "At least one tenant is required, because a TLS inspection configuration needs a server certificate."
+    error_message = "At least one tenant is required."
   }
 
   validation {
@@ -72,27 +84,6 @@ variable "tenants" {
     condition     = alltrue([for t in values(var.tenants) : alltrue([for p in t.protocols : p == 6])])
     error_message = "Network Firewall only supports TCP (protocol 6) for TLS inspection."
   }
-}
-
-# ==============================================================================
-# DNS validation
-# ==============================================================================
-variable "validation_zone_id" {
-  description = <<-EOT
-    Route 53 public hosted zone ID in this account used to create the ACM DNS validation
-    records. Leave null when the validation CNAMEs are created elsewhere (for example in a
-    central DNS account); Terraform then waits for each certificate to be issued (see
-    certificate_validation_timeout) and the records to create are in the
-    certificate_validation_records output.
-  EOT
-  type        = string
-  default     = null
-}
-
-variable "certificate_validation_timeout" {
-  description = "How long to wait for each ACM certificate to be issued"
-  type        = string
-  default     = "30m"
 }
 
 # ==============================================================================

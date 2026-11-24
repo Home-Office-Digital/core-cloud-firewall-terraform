@@ -4,6 +4,10 @@
 # Plain ACM resources are used here instead of core-cloud-acm-tf-module because every
 # released tag of that module requires AWS provider ~> 6.66, while the firewall
 # Terragrunt stack runs on provider 5.x. Switch to it once the stack moves to 6.x.
+#
+# The module only requests the certificates. Validation is done outside it: create the
+# CNAMEs from the certificate_validation_records output, wait for ACM to show ISSUED, then
+# set certificate_validated = true for the tenant. Nothing here waits for validation.
 resource "aws_acm_certificate" "this" {
   for_each = var.tenants
 
@@ -19,50 +23,20 @@ resource "aws_acm_certificate" "this" {
 }
 
 locals {
-  # One validation record per requested domain, keyed by tenant and domain so the keys are
-  # known at plan time. A wildcard and its apex share one CNAME, so both keys resolve to the
-  # same record, which allow_overwrite handles.
-  validation_records = var.validation_zone_id == null ? {} : merge([
-    for tenant, cert in aws_acm_certificate.this : {
-      for domain in var.tenants[tenant].domains :
-      "${tenant}|${domain}" => one([for o in cert.domain_validation_options : o if o.domain_name == domain])
-    }
-  ]...)
-}
-
-resource "aws_route53_record" "validation" {
-  for_each = local.validation_records
-
-  zone_id         = var.validation_zone_id
-  name            = each.value.resource_record_name
-  type            = each.value.resource_record_type
-  records         = [each.value.resource_record_value]
-  ttl             = 60
-  allow_overwrite = true
-}
-
-# Waits until each certificate is ISSUED. Without validation_zone_id the DNS records are
-# created outside this module and Terraform polls until they are in place.
-resource "aws_acm_certificate_validation" "this" {
-  for_each = aws_acm_certificate.this
-
-  certificate_arn = each.value.arn
-  validation_record_fqdns = var.validation_zone_id == null ? null : [
-    for domain in var.tenants[each.key].domains : aws_route53_record.validation["${each.key}|${domain}"].fqdn
-  ]
-
-  timeouts {
-    create = var.certificate_validation_timeout
-  }
+  # Tenants whose certificate has been validated. Only these go into the configuration.
+  validated_tenants = { for k, v in var.tenants : k => v if v.certificate_validated }
 }
 
 # ==============================================================================
 # TLS inspection configuration (inbound inspection)
 # ==============================================================================
-# The AWS provider allows only ONE server_certificate_configuration block, so every
-# tenant's certificate and every tenant's scope go into that single block. Certificates
-# are chosen by the client's SNI, and a certificate is not tied to a tenant's scope by AWS.
+# Created once at least one tenant is validated. The AWS provider allows only ONE
+# server_certificate_configuration block, so every validated tenant's certificate and
+# scope go into that single block. Certificates are chosen by the client's SNI, and a
+# certificate is not tied to a tenant's scope by AWS.
 resource "aws_networkfirewall_tls_inspection_configuration" "this" {
+  count = length(local.validated_tenants) > 0 ? 1 : 0
+
   name        = var.name
   description = var.description
 
@@ -74,14 +48,14 @@ resource "aws_networkfirewall_tls_inspection_configuration" "this" {
   tls_inspection_configuration {
     server_certificate_configuration {
       dynamic "server_certificate" {
-        for_each = aws_acm_certificate_validation.this
+        for_each = local.validated_tenants
         content {
-          resource_arn = server_certificate.value.certificate_arn
+          resource_arn = aws_acm_certificate.this[server_certificate.key].arn
         }
       }
 
       dynamic "scope" {
-        for_each = var.tenants
+        for_each = local.validated_tenants
         content {
           protocols = scope.value.protocols
 
@@ -120,4 +94,11 @@ resource "aws_networkfirewall_tls_inspection_configuration" "this" {
   }
 
   tags = var.tags
+
+  lifecycle {
+    precondition {
+      condition     = alltrue([for k in keys(local.validated_tenants) : aws_acm_certificate.this[k].status == "ISSUED"])
+      error_message = "A tenant has certificate_validated = true but its ACM certificate is not ISSUED yet. Create its validation CNAME (see the certificate_validation_records output), wait for ACM to show ISSUED, then apply again. Not yet issued: ${join(", ", [for k in keys(local.validated_tenants) : k if aws_acm_certificate.this[k].status != "ISSUED"])}."
+    }
+  }
 }
