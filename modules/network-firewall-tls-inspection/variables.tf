@@ -13,42 +13,62 @@ variable "description" {
 }
 
 # ==============================================================================
-# Tenants - one public ACM certificate and one scope each
+# Certificates - one public ACM certificate per entry
+# ==============================================================================
+variable "certificates" {
+  description = <<-EOT
+    ACM certificates to request, keyed by certificate key. Each entry is one certificate,
+    which uses one of the 10 server certificate slots in the configuration once a tenant
+    uses it. The module requests each certificate with DNS validation and does not create
+    the records or wait: create the CNAMEs from the certificate_validation_records output,
+    then set validated = true once ACM shows the certificate as ISSUED.
+
+    - domains: every name on the certificate. The first is the primary name and the rest
+      are alternative names. A wildcard covers exactly one extra label. ACM allows 10 names
+      per certificate by default, up to 100 with a raised quota. Changing the names replaces
+      the certificate, so to change a certificate in use add a new key with the new names,
+      validate it, move the tenants to it, then remove the old key.
+    - validated: true once the certificate is ISSUED. Only validated certificates, and the
+      tenants that use them, go into the configuration.
+  EOT
+  type = map(object({
+    domains   = list(string)
+    validated = optional(bool, false)
+  }))
+
+  validation {
+    condition     = length(var.certificates) > 0
+    error_message = "At least one certificate is required."
+  }
+
+  validation {
+    condition     = alltrue([for c in values(var.certificates) : length(c.domains) > 0 && length(c.domains) <= 100])
+    error_message = "Every certificate needs between 1 and 100 domains (ACM allows 10 by default, up to 100 with a raised quota)."
+  }
+}
+
+# ==============================================================================
+# Tenants - one scope each, served by one of the certificates
 # ==============================================================================
 variable "tenants" {
   description = <<-EOT
-    Tenants whose traffic can be decrypted, keyed by tenant key. Each tenant gets its own
-    public ACM certificate, requested with DNS validation. The module does not create the
-    validation records or wait for them: create the CNAMEs from the
-    certificate_validation_records output, then set certificate_validated = true.
+    Tenants whose traffic can be decrypted, keyed by tenant key. Each tenant becomes one
+    scope in the configuration once its certificate is validated.
 
-    One certificate per tenant is enough: the firewall terminates the client's TLS with it,
-    inspects, then opens its own TLS connection to the server.
-
-    - domains: names for the certificate. The first is the primary name and any others are
-      added as alternative names. A wildcard such as "*.acme.core.example.gov.uk" covers
-      exactly one extra label ("app1.acme.core.example.gov.uk") but not two.
-    - destinations: the tenant's server CIDRs. Only traffic to these is decrypted. Use a
-      range that matches nothing (192.0.2.0/32) for a tenant that is set up but not live.
-    - certificate_validated: set to true once ACM shows the certificate as ISSUED. Only
-      tenants with true are put in the TLS inspection configuration, and the configuration
-      is only created once at least one tenant is true. A tenant set to true whose
-      certificate is not ISSUED fails the plan or apply.
+    - certificate: key in `certificates` whose names cover this tenant's hostnames. Several
+      tenants can share a certificate.
+    - destinations: the tenant's server CIDRs. Only traffic to these is decrypted.
     - sources, source_ports, destination_ports, protocols: narrow the scope. By default any
       source and source port, destination port 443, TCP.
 
     All included tenants' certificates and scopes sit in the one server certificate
     configuration the AWS provider allows, so AWS picks a certificate by the client's SNI
     and does not tie it to a particular tenant's scope.
-
-    Network Firewall allows at most 10 server certificates per configuration, so at most
-    10 tenants.
   EOT
   type = map(object({
-    domains               = list(string)
-    destinations          = list(string)
-    certificate_validated = optional(bool, false)
-    sources               = optional(list(string), ["0.0.0.0/0"])
+    certificate  = string
+    destinations = list(string)
+    sources      = optional(list(string), ["0.0.0.0/0"])
     source_ports = optional(list(object({
       from_port = number
       to_port   = number
@@ -63,16 +83,6 @@ variable "tenants" {
   validation {
     condition     = length(var.tenants) > 0
     error_message = "At least one tenant is required."
-  }
-
-  validation {
-    condition     = length(var.tenants) <= 10
-    error_message = "Network Firewall allows at most 10 server certificates per TLS inspection configuration, so at most 10 tenants."
-  }
-
-  validation {
-    condition     = alltrue([for t in values(var.tenants) : length(t.domains) > 0])
-    error_message = "Every tenant needs at least one certificate domain."
   }
 
   validation {

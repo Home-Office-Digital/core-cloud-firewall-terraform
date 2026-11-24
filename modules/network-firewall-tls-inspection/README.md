@@ -1,8 +1,8 @@
 # network-firewall-tls-inspection
 
-Creates an AWS Network Firewall TLS inspection configuration for **inbound** inspection, with one public ACM server certificate and one scope per tenant. The module requests the certificates; validating them is done outside the module. Attach the result through the `tls_inspection_configuration_arn` attribute of a **new** policy version in the inspection policy module.
+Creates an AWS Network Firewall TLS inspection configuration for **inbound** inspection. You choose which names go on which ACM certificate, and which certificate serves each tenant. The module requests the certificates; validating them is done outside the module. Attach the result through the `tls_inspection_configuration_arn` attribute of a **new** policy version in the inspection policy module.
 
-Nothing is decrypted until traffic matches a scope. A tenant that is set up but not live uses a destination that matches nothing, for example `192.0.2.0/32`. The configuration is only created once at least one tenant's certificate is validated (`certificate_validated = true`).
+Nothing is decrypted until traffic matches a scope, and the configuration is only created once at least one tenant's certificate is validated.
 
 ## Usage
 
@@ -12,17 +12,21 @@ module "tls_inspection" {
 
   name = "cc-inspection-notprod-tls-inspection"
 
+  certificates = {
+    cert-1 = {
+      domains   = ["*.fw-test-1.np.core.homeoffice.gov.uk"]
+      validated = true # its CNAME is in place and ACM shows ISSUED
+    }
+    batch-1 = {
+      domains = ["*.acme.np.core.homeoffice.gov.uk", "*.globex.np.core.homeoffice.gov.uk"]
+      # validated defaults to false: requested, not used yet
+    }
+  }
+
   tenants = {
-    fw-test-1 = {
-      domains               = ["*.fw-test.np.core.homeoffice.gov.uk"]
-      destinations          = ["192.0.2.0/32"] # matches nothing
-      certificate_validated = true            # its CNAME is in place and ACM shows ISSUED
-    }
-    acme = {
-      domains      = ["*.acme.np.core.homeoffice.gov.uk"]
-      destinations = ["10.111.20.0/24"]
-      # certificate_validated defaults to false: certificate requested, not in the configuration yet
-    }
+    fw-test-1 = { certificate = "cert-1", destinations = ["192.0.2.0/32"] }
+    acme      = { certificate = "batch-1", destinations = ["10.111.20.0/24"] }
+    globex    = { certificate = "batch-1", destinations = ["10.111.30.0/24"] }
   }
 }
 
@@ -43,31 +47,45 @@ module "policy" {
 }
 ```
 
-## Tenants, certificates and scopes
+## Certificates and names
 
-- Each tenant in `tenants` gets one ACM certificate. `domains[0]` is the primary name and any further entries become alternative names.
-- A wildcard covers exactly one label. `*.acme.np.core.homeoffice.gov.uk` covers `app1.acme.np.core.homeoffice.gov.uk` but not `x.app1.acme.np.core.homeoffice.gov.uk`, and not the apex `acme.np.core.homeoffice.gov.uk`. List the apex as a second domain if it is needed.
-- One certificate per tenant is enough. The firewall terminates the client's TLS with it, inspects, then opens its own TLS connection to the server.
-- Each tenant's `destinations` become that tenant's scope. By default the scope is TCP, destination port 443, any source and source port.
-- Network Firewall allows at most 10 server certificates per configuration, so at most 10 tenants.
+- Each entry in `certificates` is one ACM certificate. `domains[0]` is the primary name and the rest are alternative names.
+- **Slots:** a configuration holds at most 10 server certificates. Only validated certificates that at least one tenant uses take a slot.
+- **Names:** ACM allows 10 names per certificate by default, up to 100 with a raised quota. Several tenants can share one certificate by listing their names on it and pointing at it.
+- A wildcard covers exactly one label. `*.acme.np.core.homeoffice.gov.uk` covers `app1.acme.np.core.homeoffice.gov.uk` but not `x.app1.acme.np.core.homeoffice.gov.uk`, and not the apex `acme.np.core.homeoffice.gov.uk`.
+- One certificate per tenant is enough for both directions. The firewall terminates the client's TLS with it, inspects, then opens its own TLS connection to the server.
 
-## Validating a certificate
+## Tenants and scopes
 
-The module requests the certificate and does not wait for it. For each tenant:
-
-1. Apply with the tenant added (`certificate_validated` left as `false`). The certificate is created as `PENDING_VALIDATION`.
-2. Create the CNAME from the `certificate_validation_records` output in the tenant's public zone, wherever it is hosted.
-3. When ACM shows the certificate as `ISSUED` (see the `certificate_status` output), set `certificate_validated = true` and apply. The tenant's certificate and scope are added to the configuration, which is created on the first such apply.
-
-A tenant set to `true` whose certificate is not `ISSUED` fails the plan or apply with a message naming it, so a pending certificate is never handed to the firewall.
-
-Changing a tenant's `domains` replaces its certificate, and the new one starts as `PENDING_VALIDATION`. Set the tenant back to `false` first, validate the new certificate, then set it to `true` again.
+- Each tenant points at a certificate key with `certificate`, and becomes one scope (`destinations`, default TCP 443 from anywhere) once that certificate is validated.
+- A tenant pointing at a key that does not exist fails the plan.
 
 > [!IMPORTANT]
-> The AWS provider allows only one server certificate configuration per TLS inspection configuration, so every tenant's certificates and scopes share it. AWS picks a certificate by the client's SNI and does not tie a certificate to a particular tenant's scope. Keeping a tenant's names and CIDRs together in `tenants` is a convention, not something AWS enforces.
+> The AWS provider allows only one server certificate configuration per TLS inspection configuration, so every included certificate and scope share it. AWS picks a certificate by the client's SNI and does not tie a certificate to a particular tenant's scope. The `certificate` link is a convention, not something AWS enforces.
 
 > [!NOTE]
 > `core-cloud-acm-tf-module` is not used because every released tag requires AWS provider `~> 6.66`, and this stack runs on provider 5.x.
+
+## Validating a certificate
+
+The module requests the certificate and does not wait for it.
+
+1. Add the certificate with `validated` left as `false`, and apply. It is created as `PENDING_VALIDATION`.
+2. Create the CNAMEs from the `certificate_validation_records` output in the public zone for each name, wherever it is hosted.
+3. When ACM shows `ISSUED` (see `certificate_status`), set `validated = true` and apply. Tenants using it are added to the configuration, which is created on the first such apply.
+
+A certificate set to `true` but not `ISSUED` fails the apply with a message naming it, and the configuration is not changed.
+
+## Changing the names on a certificate
+
+ACM cannot change a certificate's names, so changing `domains` replaces the certificate. For a certificate in use:
+
+1. Add a **new key** (for example `batch-1-v2`) with the new list of names and `validated = false`. Apply. The firewall keeps using the old certificate.
+2. Validate it. ACM reuses the validation CNAME for a name it has already validated in the same account, so usually only new names need new CNAMEs.
+3. Set `validated = true` on the new key and point the tenants at it. Apply. The configuration is updated in place.
+4. Remove the old key. Apply.
+
+If you edit `domains` on a certificate in use instead, the replacement is created but not issued, so the apply stops before the configuration changes and traffic keeps using the old certificate. Validate the replacement and apply again.
 
 ## Attaching to a policy
 
@@ -86,7 +104,8 @@ AWS does not allow adding a TLS inspection configuration to an existing firewall
 |---|---|---|
 | `name` | Name of the TLS inspection configuration | required |
 | `description` | Description | `"TLS inspection configuration"` |
-| `tenants` | Map of tenant key to `domains` and `destinations`, with optional `certificate_validated` (default `false`), `sources`, `source_ports`, `destination_ports` and `protocols`. 1 to 10 tenants | required |
+| `certificates` | Map of certificate key to `domains` (1 to 100) and optional `validated` (default `false`) | required |
+| `tenants` | Map of tenant key to `certificate` (a certificate key) and `destinations`, with optional `sources`, `source_ports`, `destination_ports` and `protocols` | required |
 | `kms_key_arn` | Customer managed KMS key, or null for an AWS owned key | `null` |
 | `tags` | Tags for the certificates and configuration | `{}` |
 
@@ -94,7 +113,8 @@ AWS does not allow adding a TLS inspection configuration to an existing firewall
 
 | Name | Description |
 |---|---|
-| `tls_inspection_configuration_arn` | ARN to set on a policy version. Null until a tenant is validated |
-| `server_certificate_arns` | Certificate ARN for each tenant |
-| `certificate_status` | ACM status of each tenant's certificate |
-| `certificate_validation_records` | DNS validation CNAMEs for each tenant's certificate |
+| `tls_inspection_configuration_arn` | ARN to set on a policy version. Null until a tenant's certificate is validated |
+| `certificate_arns` | ARN of each certificate |
+| `certificate_status` | ACM status of each certificate |
+| `certificate_validation_records` | DNS validation CNAMEs for each certificate |
+| `tenants_in_configuration` | Tenants whose scope is in the configuration, with their certificate |
