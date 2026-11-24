@@ -136,8 +136,9 @@ run "validated_but_not_issued_is_rejected" {
     }
   }
 
+  # Keyless target: OpenTofu does not accept instance keys here. It applies to every instance.
   override_resource {
-    target = aws_acm_certificate.this["fw-test-pending"]
+    target = aws_acm_certificate.this
     values = {
       arn    = "arn:aws:acm:eu-west-2:123456789012:certificate/22222222-2222-2222-2222-222222222222"
       status = "PENDING_VALIDATION"
