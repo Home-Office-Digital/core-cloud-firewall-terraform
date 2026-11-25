@@ -156,3 +156,56 @@ run "perimeter_policy_plan_with_managed_and_custom_groups" {
     error_message = "Primary key should be present in firewall_policy_arns"
   }
 }
+
+run "security_defaults_cmk_and_delete_protection" {
+  command = plan
+
+  variables {
+    network_firewall_name        = "existing-perimeter-firewall"
+    network_firewall_policy_name = "perimeter-policy"
+    vpc_id                       = "vpc-12345678"
+    account_id                   = "123456789012"
+
+    active_policy_version = "primary"
+
+    policy_versions = {
+      primary = {
+        name_suffix            = ""
+        description            = "Primary perimeter firewall policy"
+        custom_stateful_groups = []
+        tags                   = {}
+      }
+    }
+  }
+
+  override_data {
+    target = data.aws_networkfirewall_firewall.imported
+    values = {
+      subnet_mapping = [
+        {
+          subnet_id = "subnet-12345678"
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = aws_networkfirewall_firewall.existing.delete_protection == true
+    error_message = "Deletion protection should be on by default"
+  }
+
+  assert {
+    condition     = aws_networkfirewall_firewall.existing.encryption_configuration[0].type == "CUSTOMER_KMS"
+    error_message = "The firewall should be encrypted with the customer managed key"
+  }
+
+  assert {
+    condition     = alltrue([for p in aws_networkfirewall_firewall_policy.this : p.encryption_configuration[0].type == "CUSTOMER_KMS"])
+    error_message = "Every policy version should be encrypted with the customer managed key"
+  }
+
+  assert {
+    condition     = aws_kms_key.this.enable_key_rotation == true
+    error_message = "Key rotation should be enabled"
+  }
+}

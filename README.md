@@ -8,7 +8,7 @@ This repository is designed around managing an existing firewall (for example, o
 
 ### Policies
 
-- `modules/network-firewall-policies/inspection`: Versioned inspection firewall policies with support for AWS-managed and custom rule groups.
+- `modules/network-firewall-policies/inspection`: Versioned inspection firewall policies with support for AWS-managed and custom rule groups, and an optional TLS inspection configuration.
 - `modules/network-firewall-policies/perimeter`: Versioned perimeter firewall policies with active-version switching.
 
 ### Rule groups
@@ -17,12 +17,11 @@ This repository is designed around managing an existing firewall (for example, o
 - `modules/network-firewall-rulegroups/inspection/stateless`: Generic stateless rule group module.
 - `modules/network-firewall-rulegroups/perimeter/stateful`: Versioned perimeter stateful rule group module for domain allowlists.
 
-### Opinionated bundles
-
-- `modules/network-firewall-rules-egress`: Egress-focused opinionated module that manages an existing firewall, policy, and allowlist rule group together.
-- `modules/network-firewall-rules-inspection`: Inspection-focused opinionated module for attaching AWS-managed and custom stateful groups to an existing firewall.
+### TLS inspection
+- `modules/network-firewall-tls-inspection`: Inbound TLS inspection configuration with public ACM server certificates and per-tenant scopes. Attach it through the inspection policy module.
 
 ## Key capabilities
+- The policy modules encrypt the firewall and every policy version with a customer managed KMS key they create (rotation on, protected from destroy), and turn on firewall deletion protection by default (`delete_protection`). If the key is disabled or deleted, the firewall drops all traffic.
 
 - Versioned policy support using maps (for example, `primary`, `secondary`) and active-version selection.
 - Versioned rule groups with per-version domain lists and tagging.
@@ -104,7 +103,7 @@ module "perimeter_policy" {
 - Stateful inspection rule group docs: `modules/network-firewall-rulegroups/inspection/stateful/README.md`
 - Stateless inspection rule group docs: `modules/network-firewall-rulegroups/inspection/stateless/README.md`
 - Inspection rule group package docs: `modules/network-firewall-rulegroups/inspection/README.md`
-- Egress opinionated module docs: `modules/network-firewall-rules-egress/README.md`
+- TLS inspection module docs: `modules/network-firewall-tls-inspection/README.md`
 
 ## Development
 

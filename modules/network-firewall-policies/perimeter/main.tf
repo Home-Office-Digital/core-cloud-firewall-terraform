@@ -56,6 +56,12 @@ resource "aws_networkfirewall_firewall_policy" "this" {
     stateless_fragment_default_actions = var.stateless_fragment_default_actions
   }
 
+
+  # Customer managed KMS key (see kms.tf)
+  encryption_configuration {
+    type   = "CUSTOMER_KMS"
+    key_id = aws_kms_key.this.arn
+  }
   tags = merge(
     var.tags,
     each.value.tags,
@@ -72,6 +78,15 @@ resource "aws_networkfirewall_firewall" "existing" {
   name                = var.network_firewall_name
   vpc_id              = var.vpc_id
   firewall_policy_arn = aws_networkfirewall_firewall_policy.this[var.active_policy_version].arn
+
+  # Protect against accidental deletion (CKV_AWS_344)
+  delete_protection = var.delete_protection
+
+  # Customer managed KMS key (see kms.tf)
+  encryption_configuration {
+    type   = "CUSTOMER_KMS"
+    key_id = aws_kms_key.this.arn
+  }
 
   dynamic "subnet_mapping" {
     for_each = data.aws_networkfirewall_firewall.imported.subnet_mapping
