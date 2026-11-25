@@ -78,3 +78,8 @@ output "available_versions" {
   description = "List of all available policy versions"
   value       = keys(aws_networkfirewall_firewall_policy.this)
 }
+
+output "kms_key_arn" {
+  description = "ARN of the customer managed KMS key that encrypts the firewall and its policies"
+  value       = aws_kms_key.this.arn
+}

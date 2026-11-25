@@ -115,3 +115,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "delete_protection" {
+  description = "Protect the firewall against deletion. Keep true; set false only to deliberately remove a firewall."
+  type        = bool
+  default     = true
+}

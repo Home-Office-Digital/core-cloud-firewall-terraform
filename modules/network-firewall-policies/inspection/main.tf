@@ -93,6 +93,12 @@ resource "aws_networkfirewall_firewall_policy" "this" {
     tls_inspection_configuration_arn = each.value.tls_inspection_configuration_arn
   }
 
+
+  # Customer managed KMS key (see kms.tf)
+  encryption_configuration {
+    type   = "CUSTOMER_KMS"
+    key_id = aws_kms_key.this.arn
+  }
   tags = each.value.tags
 
   lifecycle {
@@ -115,6 +121,15 @@ resource "aws_networkfirewall_firewall" "existing" {
 
   # Point to active policy version
   firewall_policy_arn = aws_networkfirewall_firewall_policy.this[var.active_policy_version].arn
+
+  # Protect against accidental deletion (CKV_AWS_344)
+  delete_protection = var.delete_protection
+
+  # Customer managed KMS key (see kms.tf)
+  encryption_configuration {
+    type   = "CUSTOMER_KMS"
+    key_id = aws_kms_key.this.arn
+  }
 
   # Mirror existing subnet mappings
   dynamic "subnet_mapping" {

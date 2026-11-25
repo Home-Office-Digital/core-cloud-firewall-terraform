@@ -55,3 +55,8 @@ output "firewall_status" {
   description = "Status of the firewall"
   value       = aws_networkfirewall_firewall.existing.firewall_status
 }
+
+output "kms_key_arn" {
+  description = "ARN of the customer managed KMS key that encrypts the firewall and its policies"
+  value       = aws_kms_key.this.arn
+}

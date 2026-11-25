@@ -251,3 +251,57 @@ run "inspection_policy_tls_off_by_default" {
     error_message = "TLS inspection should be off unless a version sets an ARN"
   }
 }
+
+run "security_defaults_cmk_and_delete_protection" {
+  command = plan
+
+  variables {
+    account_id                   = "123456789012"
+    vpc_id                       = "vpc-12345678"
+    network_firewall_name        = "existing-inspection-firewall"
+    network_firewall_policy_name = "inspection-policy"
+
+    active_policy_version = "primary"
+
+    policy_versions = {
+      primary = {
+        name_suffix             = ""
+        description             = "Primary inspection firewall policy"
+        tags                    = {}
+        custom_stateful_groups  = []
+        custom_stateless_groups = []
+      }
+    }
+  }
+
+  override_data {
+    target = data.aws_networkfirewall_firewall.imported
+    values = {
+      subnet_mapping = [
+        {
+          subnet_id = "subnet-12345678"
+        }
+      ]
+    }
+  }
+
+  assert {
+    condition     = aws_networkfirewall_firewall.existing.delete_protection == true
+    error_message = "Deletion protection should be on by default"
+  }
+
+  assert {
+    condition     = aws_networkfirewall_firewall.existing.encryption_configuration[0].type == "CUSTOMER_KMS"
+    error_message = "The firewall should be encrypted with the customer managed key"
+  }
+
+  assert {
+    condition     = alltrue([for p in aws_networkfirewall_firewall_policy.this : p.encryption_configuration[0].type == "CUSTOMER_KMS"])
+    error_message = "Every policy version should be encrypted with the customer managed key"
+  }
+
+  assert {
+    condition     = aws_kms_key.this.enable_key_rotation == true
+    error_message = "Key rotation should be enabled"
+  }
+}
