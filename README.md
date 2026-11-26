@@ -19,6 +19,7 @@ This repository is designed around managing an existing firewall (for example, o
 
 ### TLS inspection
 - `modules/network-firewall-tls-inspection`: Inbound TLS inspection configuration with public ACM server certificates and per-tenant scopes. Attach it through the inspection policy module.
+- `modules/network-firewall-logging`: The logging configuration (ALERT, FLOW, TLS destinations) of an existing firewall. Used to add TLS logs, which LZA cannot configure.
 
 ## Key capabilities
 - The policy modules encrypt the firewall and every policy version with a customer managed KMS key they create (rotation on, protected from destroy), and turn on firewall deletion protection by default (`delete_protection`). If the key is disabled or deleted, the firewall drops all traffic.
