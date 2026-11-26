@@ -82,6 +82,62 @@ run "stateful_rulegroup_plan_secondary" {
   }
 }
 
+# Default rule_variables (both sets empty) must not emit an empty rule_variables
+# block: AWS does not store one, so it would show as a perpetual diff.
+run "stateful_rulegroup_plan_no_rule_variables" {
+  command = plan
+
+  variables {
+    name        = "inspection-stateful-rg-novars"
+    description = "Inspection stateful rule group without variables"
+    capacity    = 100
+
+    rule_group_versions = {
+      primary = {
+        name_suffix         = ""
+        description_suffix  = ""
+        suricata_rules_path = "alert tcp any any -> any 21 (msg:\"test\"; sid:1; rev:1;)"
+        tags                = {}
+      }
+    }
+  }
+
+  assert {
+    condition     = length(aws_networkfirewall_rule_group.this["primary"].rule_group[0].rule_variables) == 0
+    error_message = "No rule_variables block should be emitted when no IP or port sets are given"
+  }
+}
+
+# Explicitly empty sets behave the same as the default.
+run "stateful_rulegroup_plan_empty_rule_variables" {
+  command = plan
+
+  variables {
+    name        = "inspection-stateful-rg-emptyvars"
+    description = "Inspection stateful rule group with empty variables"
+    capacity    = 100
+
+    rule_group_versions = {
+      primary = {
+        name_suffix         = ""
+        description_suffix  = ""
+        suricata_rules_path = "alert tcp any any -> any 21 (msg:\"test\"; sid:1; rev:1;)"
+        tags                = {}
+      }
+    }
+
+    rule_variables = {
+      ipSets   = {}
+      portSets = {}
+    }
+  }
+
+  assert {
+    condition     = length(aws_networkfirewall_rule_group.this["primary"].rule_group[0].rule_variables) == 0
+    error_message = "No rule_variables block should be emitted for empty IP and port sets"
+  }
+}
+
 run "stateful_rulegroup_plan_with_rule_variables" {
   command = plan
 
@@ -132,6 +188,11 @@ run "stateful_rulegroup_plan_with_rule_variables" {
   assert {
     condition     = output.type == "STATEFUL"
     error_message = "Rule group type should remain STATEFUL"
+  }
+
+  assert {
+    condition     = length(aws_networkfirewall_rule_group.this["primary"].rule_group[0].rule_variables) == 1
+    error_message = "A rule_variables block should be emitted when IP or port sets are given"
   }
 
   assert {

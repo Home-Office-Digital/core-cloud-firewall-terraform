@@ -67,8 +67,11 @@ resource "aws_networkfirewall_rule_group" "this" {
 
   rule_group {
 
+    # Count the sets, not the object: length(var.rule_variables) is always 2
+    # (ipSets, portSets), which emitted an empty block AWS never stores and
+    # caused a perpetual "+ rule_variables {}" diff.
     dynamic "rule_variables" {
-      for_each = length(var.rule_variables) > 0 ? [1] : []
+      for_each = length(try(var.rule_variables.ipSets, {})) + length(try(var.rule_variables.portSets, {})) > 0 ? [1] : []
 
       content {
         dynamic "ip_sets" {
