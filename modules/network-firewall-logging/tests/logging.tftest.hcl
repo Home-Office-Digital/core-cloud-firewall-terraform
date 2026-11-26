@@ -36,7 +36,7 @@ run "alert_flow_and_tls" {
   }
 
   assert {
-    condition     = output.log_types == ["ALERT", "FLOW", "TLS"]
+    condition     = output.log_types == tolist(["ALERT", "FLOW", "TLS"])
     error_message = "log_types output should list the configured types"
   }
 }
